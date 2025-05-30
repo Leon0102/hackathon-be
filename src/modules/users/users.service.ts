@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, HttpStatus } from '@nestjs/common';
 import { ConflictException, NotFoundException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -32,7 +32,7 @@ export class UsersService {
     }
 
     async getUserByEmail(email: string): Promise<Users | null> {
-        return this.usersModel.findOne({ email });
+        return this.usersModel.findOne({ email }).select('-passwordHash').lean().exec();
     }
 
     async findByIdOrEmail({ id, email }: { id?: string; email?: string }) {
@@ -86,11 +86,11 @@ export class UsersService {
     }
 
     async getAllUsers(): Promise<Users[]> {
-        return this.usersModel.find().select('-passwordHash').exec();
+        return this.usersModel.find().select('-passwordHash').lean().exec();
     }
 
     async getUserById(userId: string): Promise<Users> {
-        const user = await this.usersModel.findById(userId).select('-passwordHash').exec();
+        const user = await this.usersModel.findById(userId).select('-passwordHash').lean().exec();
 
         if (!user) {
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
@@ -152,7 +152,7 @@ export class UsersService {
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return user;
+        return user.toObject();
     }
 
     async deleteUser(userId: string): Promise<ResponseDto> {
@@ -162,7 +162,7 @@ export class UsersService {
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return new ResponseDto({ messageCode: SuccessCode.USER_DELETED || 'USER_DELETED' });
+        return new ResponseDto({ statusCode: HttpStatus.OK, messageCode: SuccessCode.USER_DELETED });
     }
 
     async uploadAvatar(userId: string, file: Express.Multer.File): Promise<Users> {
@@ -191,6 +191,6 @@ export class UsersService {
         if (!updated) {
             throw new NotFoundException('User not found');
         }
-        return updated;
+        return updated.toObject();
     }
 }

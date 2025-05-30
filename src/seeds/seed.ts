@@ -13,7 +13,7 @@ import {
 } from '../constants';
 
 async function main() {
-  const uri = 'mongodb+srv://linh:cjMxz7sNneA2nqsK@cluster0.lcp74ko.mongodb.net/?retryWrites=true&w=majority'
+  const uri = 'mongodb+srv://haphuchoan:9AAoyHqH0FvTDpkR@cluster0.7n65af.mongodb.net/'
   const dbName = 'nest-api-mongo-database'
   await mongoose.connect(uri, { dbName });
   console.log(`Connected to MongoDB: ${uri}, database: ${dbName}`);

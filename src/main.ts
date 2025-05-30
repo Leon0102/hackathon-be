@@ -17,22 +17,15 @@ import { ApiConfigService } from './shared/services/api-config.service';
 import { SharedModule } from './shared/shared.module';
 
 export async function bootstrap(): Promise<NestExpressApplication> {
-    // Optional HTTPS configuration
-    const httpsOptions =
-        process.env.SSL_KEY_PATH && process.env.SSL_CERT_PATH
-            ? {
-                  key: fs.readFileSync(process.env.SSL_KEY_PATH),
-                  cert: fs.readFileSync(process.env.SSL_CERT_PATH)
-              }
-            : undefined;
     const app = await NestFactory.create<NestExpressApplication>(
         AppModule,
         new ExpressAdapter(),
-        { cors: true, ...(httpsOptions ? { httpsOptions } : {}) }
+        { cors: true }
     );
 
-    app.setGlobalPrefix('/api', { exclude: [{ path: '/manifest/:startUrl', method: RequestMethod.GET }] });
+    app.enable('trust proxy');
     app.use(helmet());
+    app.setGlobalPrefix('/api', { exclude: [{ path: '/manifest/:startUrl', method: RequestMethod.GET }] });
     app.use(
         rateLimit({
             windowMs: 15 * 60 * 1000, // 15 minutes

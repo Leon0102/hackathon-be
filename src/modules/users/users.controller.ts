@@ -18,12 +18,13 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Connection } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { plainToInstance } from 'class-transformer';
 
 import { ResponseDto } from '../../common/dto';
 import { UserRole } from '../../constants';
 import { Auth, AuthUser } from '../../decorators';
 import { ChangePasswordDto, UpdateUserDto } from './dto/request';
-import { UserResponseDto } from './dto/response';
+import { UserResponseDto } from './dto/response/user-response.dto';
 import { Users } from './schema';
 import { UsersService } from './users.service';
 
@@ -43,7 +44,8 @@ export class UsersController {
     })
     @ApiOperation({ summary: 'Get user by id' })
     async getUser(@Param('id') id: string) {
-        return this.usersService.findByIdOrEmail({ id });
+        const user = await this.usersService.findByIdOrEmail({ id });
+        return plainToInstance(UserResponseDto, user.toObject(), { excludeExtraneousValues: true });
     }
 
     @Patch('change-password')
@@ -68,7 +70,8 @@ export class UsersController {
     })
     @ApiOperation({ summary: 'Get all users (Admin only)' })
     async getAllUsers() {
-        return this.usersService.getAllUsers();
+        const users = await this.usersService.getAllUsers();
+        return users.map(u => plainToInstance(UserResponseDto, (u as any).toObject(), { excludeExtraneousValues: true }));
     }
 
     @Get('profile')
@@ -81,7 +84,8 @@ export class UsersController {
     })
     @ApiOperation({ summary: 'Get current user profile' })
     async getCurrentUserProfile(@AuthUser() user: Users) {
-        return this.usersService.getUserByEmail(user.email);
+        const profile = await this.usersService.getUserByEmail(user.email);
+        return profile ? plainToInstance(UserResponseDto, profile.toObject(), { excludeExtraneousValues: true }) : null;
     }
 
     @Put('profile')
@@ -94,7 +98,8 @@ export class UsersController {
     })
     @ApiOperation({ summary: 'Update user profile' })
     async updateProfile(@AuthUser() user: Users, @Body() updateUserDto: UpdateUserDto) {
-        return this.usersService.updateUserByEmail(user.email, updateUserDto);
+        const updated = await this.usersService.updateUserByEmail(user.email, updateUserDto);
+        return plainToInstance(UserResponseDto, updated.toObject(), { excludeExtraneousValues: true });
     }
 
     @Patch(':id/trust-score')
@@ -106,7 +111,8 @@ export class UsersController {
     })
     @ApiOperation({ summary: 'Update user trust score (Admin only)' })
     async updateTrustScore(@Param('id') id: string, @Body('trustScore') trustScore: number) {
-        return this.usersService.updateTrustScore(id, trustScore);
+        const updated = await this.usersService.updateTrustScore(id, trustScore);
+        return plainToInstance(UserResponseDto, updated.toObject(), { excludeExtraneousValues: true });
     }
 
     @Patch(':id/verify')
@@ -118,7 +124,8 @@ export class UsersController {
     })
     @ApiOperation({ summary: 'Verify user (Admin only)' })
     async verifyUser(@Param('id') id: string) {
-        return this.usersService.verifyUser(id);
+        const updated = await this.usersService.verifyUser(id);
+        return plainToInstance(UserResponseDto, updated.toObject(), { excludeExtraneousValues: true });
     }
 
     @Delete(':id')

@@ -18,6 +18,7 @@ import { TripsModule } from './modules/trips/trips.module';
 import { UsersModule } from './modules/users/users.module';
 import { ApiConfigService } from './shared/services/api-config.service';
 import { SharedModule } from './shared/shared.module';
+import { GroupsModule } from './modules/groups/groups.module';
 
 @Module({
     imports: [
@@ -54,6 +55,7 @@ import { SharedModule } from './shared/shared.module';
         ReviewsModule,
         ReportsModule,
         AdminsModule,
+        GroupsModule,
         ScheduleModule.forRoot()
     ],
     providers: []
