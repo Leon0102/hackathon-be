@@ -33,7 +33,7 @@ export class UsersService {
 
     // Returns plain user object without Mongoose methods
     async getUserByEmail(email: string): Promise<any | null> {
-        return this.usersModel.findOne({ email }).select('-passwordHash').lean().exec();
+        return this.usersModel.findOne({ email }).lean().exec();
     }
 
     async findByIdOrEmail({ id, email }: { id?: string; email?: string }) {
