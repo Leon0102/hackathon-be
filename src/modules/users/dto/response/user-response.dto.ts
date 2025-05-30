@@ -58,4 +58,7 @@ export class UserResponseDto {
 
     @Expose()
     profileCompletion?: number;
+
+    @Expose()
+    avatarUrl?: string;
 }

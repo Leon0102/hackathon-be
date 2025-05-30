@@ -1,19 +1,32 @@
-FROM node:16-alpine
+FROM --platform=linux/amd64  node:lts AS dist
+COPY package.json yarn.lock ./
 
-# Create app directory
+RUN yarn install
+
+COPY . ./
+
+RUN yarn build:prod
+
+FROM --platform=linux/amd64  node:lts AS node_modules
+COPY package.json yarn.lock ./
+
+RUN yarn install --prod
+
+FROM --platform=linux/amd64 node:lts
+
+ARG PORT=4000
+
+ENV NODE_ENV=production
+
+RUN mkdir -p /usr/src/app
+
 WORKDIR /usr/src/app
 
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
+COPY --from=dist dist /usr/src/app/dist
+COPY --from=node_modules node_modules /usr/src/app/node_modules
 
-# Install app dependencies
-RUN npm install
+COPY . /usr/src/app
 
-# Bundle app source
-COPY . .
+EXPOSE $PORT
 
-# Creates a "dist" folder with the production build
-RUN npm run build:prod
-
-# Start the server using the production build
-CMD [ "node", "dist/main.js" ]
+CMD [ "yarn", "start" ]

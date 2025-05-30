@@ -9,11 +9,15 @@ import {
     Put,
     Delete,
     UseInterceptors,
-    ClassSerializerInterceptor
+    ClassSerializerInterceptor,
+    UploadedFile,
+    Post
 } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Connection } from 'mongoose';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 
 import { ResponseDto } from '../../common/dto';
 import { UserRole } from '../../constants';
@@ -127,5 +131,21 @@ export class UsersController {
     @ApiOperation({ summary: 'Delete user (Admin only)' })
     async deleteUser(@Param('id') id: string) {
         return this.usersService.deleteUser(id);
+    }
+
+    @Post('avatar')
+    @Auth([UserRole.USER, UserRole.ADMIN])
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(FileInterceptor('file', {
+        storage: memoryStorage(),
+        limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+    }))
+    @ApiOperation({ summary: 'Upload user avatar' })
+    @ApiOkResponse({ description: 'Uploaded avatar URL', type: UserResponseDto })
+    async uploadAvatar(
+        @UploadedFile() file: Express.Multer.File,
+        @AuthUser() user: Users
+    ) {
+        return this.usersService.uploadAvatar(user._id.toString(), file);
     }
 }

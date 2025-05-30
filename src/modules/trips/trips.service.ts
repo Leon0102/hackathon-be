@@ -4,13 +4,23 @@ import { Model, Types } from 'mongoose';
 
 import { Trips, TripsDocument } from './schema/trips.schema';
 import { CreateTripDto, UpdateTripDto, UpdateMemberStatusDto, JoinTripDto } from './dto/request';
+import { RecommendMembersDto } from './dto/request/recommend-members.dto';
 import { TripStatus, MemberStatus } from '../../constants';
+import { RecommendationLog } from './schema/recommendation-log.schema';
+import { Users } from '../users/schema/users.schema';
+import OpenAI from 'openai';
 
 @Injectable()
 export class TripsService {
+    private openai: OpenAI;
+
     constructor(
         @InjectModel(Trips.name) private readonly tripsModel: Model<TripsDocument>,
-    ) {}
+        @InjectModel(RecommendationLog.name) private readonly recLogModel: Model<RecommendationLog>,
+        @InjectModel(Users.name) private readonly userModel: Model<Users>
+    ) {
+        this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    }
 
     async createTrip(createTripDto: CreateTripDto, creatorId: string): Promise<TripsDocument> {
         const trip = new this.tripsModel({
@@ -314,4 +324,43 @@ export class TripsService {
 
         return updatedTrip;
     }
+
+    async recommendMembers(tripId: string, userId: string, dto: RecommendMembersDto): Promise<Users[]> {
+        // Log the recommendation request
+        await this.recLogModel.create({ user: userId, trip: tripId, keyword: dto.keyword });
+
+        // Fetch the trip to exclude its members and creator
+        const trip = await this.tripsModel.findById(tripId).exec();
+        if (!trip) {
+            throw new NotFoundException('Trip not found');
+        }
+        const excludedIds = trip.members.map(m => m.user.toString()).concat(trip.createdBy.toString(), userId);
+
+        // Fetch candidate users not already on the trip
+        const candidates = await this.userModel.find({ _id: { $nin: excludedIds } }).exec();
+
+        // Use OpenAI to recommend best matching user IDs
+        const profiles = candidates.map(u => `ID: ${u._id}, Name: ${u.fullName}, Tags: ${(u.tags||[]).join(', ')}, Bio: ${u.bio}`).join('\n');
+        const prompt = `Recommend up to 5 user IDs best matching keyword "${dto.keyword}" from the users list:\n${profiles}`;
+        const completion = await this.openai.chat.completions.create({
+            model: 'gpt-3.5-turbo',
+            messages: [{ role: 'user', content: prompt }]
+        });
+        let recommendedIds: string[] = [];
+        try {
+            recommendedIds = JSON.parse(completion.choices[0].message.content!);
+        } catch {
+            // fallback to simple tag match
+            const keywordLower = dto.keyword.toLowerCase();
+            recommendedIds = candidates.filter(u =>
+                Array.isArray(u.tags) && u.tags.some(tag => tag.toLowerCase().includes(keywordLower))
+            ).map(u => u._id.toString());
+        }
+        let recommended = candidates.filter(u => recommendedIds.includes(u._id.toString()));
+        if (recommended.length === 0) {
+            recommended = candidates.slice(0, 5);
+        }
+        return recommended;
+    }
+
 }

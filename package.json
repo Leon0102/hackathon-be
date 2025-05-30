@@ -26,7 +26,8 @@
         "prerelease": "yarn docs:deploy",
         "release": "release-it",
         "pre-commit": "yarn lint-staged",
-        "run-localtunnel": "npx localtunnel --subdomain nestjs-monolithic-boilerplate --port 4000"
+        "run-localtunnel": "npx localtunnel --subdomain nestjs-monolithic-boilerplate --port 4000",
+        "seed": "ts-node src/seeds/seed.ts"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.264.0",
@@ -48,7 +49,7 @@
         "@nestjs/terminus": "^9.1.4",
         "@nestjs/throttler": "^4.0.0",
         "@types/nodemailer": "^6.4.7",
-        "bcrypt": "^5.1.0",
+        "bcrypt": "^5.1.1",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.0",
         "compression": "^1.7.4",
@@ -66,6 +67,7 @@
         "morgan": "^1.10.0",
         "nodemailer": "^6.9.1",
         "npm-check-updates": "^16.6.3",
+        "openai": "^4.104.0",
         "otplib": "^12.0.1",
         "passport": "^0.6.0",
         "passport-jwt": "^4.0.1",
@@ -83,6 +85,7 @@
         "@commitlint/cli": "^17.4.2",
         "@commitlint/config-angular": "^17.4.2",
         "@commitlint/config-conventional": "^17.4.2",
+        "@faker-js/faker": "^8.0.2",
         "@handfish/hygen": "^6.1.6",
         "@nestjs/cli": "^9.1.9",
         "@nestjs/testing": "^9.3.1",
@@ -97,7 +100,7 @@
         "@types/mime-types": "^2.1.1",
         "@types/morgan": "^1.9.4",
         "@types/multer": "^1.4.7",
-        "@types/node": "^18.11.18",
+        "@types/node": "^18.19.108",
         "@types/passport-jwt": "^3.0.8",
         "@types/supertest": "^2.0.12",
         "@types/uuid": "^9.0.0",
@@ -136,6 +139,11 @@
     "engines": {
         "npm": ">=8.0.0 <9.0.0",
         "node": ">=16.0.0"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "bcrypt"
+        ]
     },
     "jest": {
         "moduleFileExtensions": [

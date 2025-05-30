@@ -18,12 +18,13 @@ import { ApiOkResponse, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger'
 import { ResponseDto } from '../../common/dto';
 import { UserRole } from '../../constants';
 import { Auth, AuthUser } from '../../decorators';
-import { Users } from '../users/schema';
+import { Users } from '../users/schema/users.schema';
 import {
     CreateTripDto,
     UpdateTripDto,
     UpdateMemberStatusDto,
-    JoinTripDto
+    JoinTripDto,
+    RecommendMembersDto
 } from './dto/request';
 import { TripResponseDto } from './dto/response';
 import { TripsService } from './trips.service';
@@ -213,5 +214,22 @@ export class TripsController {
         @AuthUser() user: Users
     ) {
         return this.tripsService.removeMember(id, memberId, user._id.toString());
+    }
+
+    @Post(':id/recommend')
+    @Auth([UserRole.USER, UserRole.ADMIN])
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(ClassSerializerInterceptor)
+    @ApiOkResponse({
+        description: 'Recommend members for a trip based on keyword',
+        type: [Users]
+    })
+    @ApiOperation({ summary: 'Recommend members for a trip' })
+    async recommendMembers(
+        @Param('id') id: string,
+        @Body() recommendDto: RecommendMembersDto,
+        @AuthUser() user: Users
+    ) {
+        return this.tripsService.recommendMembers(id, user._id.toString(), recommendDto);
     }
 }
