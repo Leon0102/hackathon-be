@@ -1,5 +1,6 @@
 import {
     Body,
+    ClassSerializerInterceptor,
     Controller,
     Delete,
     Get,
@@ -10,10 +11,10 @@ import {
     Post,
     Put,
     Query,
-    UseInterceptors,
-    ClassSerializerInterceptor
+    UseInterceptors
 } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
 
 import { ResponseDto } from '../../common/dto';
 import { UserRole } from '../../constants';
@@ -21,10 +22,10 @@ import { Auth, AuthUser } from '../../decorators';
 import { Users } from '../users/schema/users.schema';
 import {
     CreateTripDto,
-    UpdateTripDto,
-    UpdateMemberStatusDto,
     JoinTripDto,
-    RecommendMembersDto
+    RecommendMembersDto,
+    UpdateMemberStatusDto,
+    UpdateTripDto
 } from './dto/request';
 import { TripResponseDto } from './dto/response';
 import { TripsService } from './trips.service';
@@ -43,11 +44,12 @@ export class TripsController {
         type: TripResponseDto
     })
     @ApiOperation({ summary: 'Create a new trip' })
-    async createTrip(
-        @Body() createTripDto: CreateTripDto,
-        @AuthUser() user: Users
-    ) {
-        return this.tripsService.createTrip(createTripDto, user.id ?? user._id?.toString());
+    async createTrip(@Body() createTripDto: CreateTripDto, @AuthUser() user: Users) {
+        const result = await this.tripsService.createTrip(createTripDto, user.id ?? user._id?.toString());
+
+        return plainToInstance(TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
 
     @Get()
@@ -60,11 +62,12 @@ export class TripsController {
     @ApiOperation({ summary: 'Get all trips' })
     @ApiQuery({ name: 'page', required: false, type: Number })
     @ApiQuery({ name: 'limit', required: false, type: Number })
-    async getAllTrips(
-        @Query('page') page: number = 1,
-        @Query('limit') limit: number = 10
-    ) {
-        return this.tripsService.getAllTrips(page, limit);
+    async getAllTrips(@Query('page') page = 1, @Query('limit') limit = 10) {
+        const result = await this.tripsService.getAllTrips(page, limit);
+
+        return plainToInstance(TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
 
     @Get('my-trips')
@@ -77,7 +80,11 @@ export class TripsController {
     })
     @ApiOperation({ summary: 'Get my trips' })
     async getMyTrips(@AuthUser() user: Users) {
-        return this.tripsService.getMyTrips(user._id.toString());
+        const result = await this.tripsService.getMyTrips(user._id.toString());
+
+        return plainToInstance(TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
 
     @Get('search')
@@ -96,7 +103,11 @@ export class TripsController {
         @Query('startDate') startDate?: Date,
         @Query('endDate') endDate?: Date
     ) {
-        return this.tripsService.searchTrips(destination, startDate, endDate);
+        const result = await this.tripsService.searchTrips(destination, startDate, endDate);
+
+        return plainToInstance(TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
 
     @Get(':id')
@@ -120,12 +131,12 @@ export class TripsController {
         type: TripResponseDto
     })
     @ApiOperation({ summary: 'Update trip (creator only)' })
-    async updateTrip(
-        @Param('id') id: string,
-        @Body() updateTripDto: UpdateTripDto,
-        @AuthUser() user: Users
-    ) {
-        return this.tripsService.updateTrip(id, updateTripDto, user._id.toString());
+    async updateTrip(@Param('id') id: string, @Body() updateTripDto: UpdateTripDto, @AuthUser() user: Users) {
+        const result = await this.tripsService.updateTrip(id, updateTripDto, user._id.toString());
+
+        return plainToInstance(TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
 
     @Delete(':id')
@@ -136,10 +147,7 @@ export class TripsController {
         type: ResponseDto
     })
     @ApiOperation({ summary: 'Delete trip (creator only)' })
-    async deleteTrip(
-        @Param('id') id: string,
-        @AuthUser() user: Users
-    ) {
+    async deleteTrip(@Param('id') id: string, @AuthUser() user: Users) {
         return this.tripsService.deleteTrip(id, user._id.toString());
     }
 
@@ -152,12 +160,12 @@ export class TripsController {
         type: TripResponseDto
     })
     @ApiOperation({ summary: 'Request to join a trip' })
-    async joinTrip(
-        @Param('id') id: string,
-        @Body() joinTripDto: JoinTripDto,
-        @AuthUser() user: Users
-    ) {
-        return this.tripsService.joinTrip(id, user._id.toString(), joinTripDto);
+    async joinTrip(@Param('id') id: string, @Body() joinTripDto: JoinTripDto, @AuthUser() user: Users) {
+        const result = await this.tripsService.joinTrip(id, user._id.toString(), joinTripDto);
+
+        return plainToInstance(TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
 
     @Delete(':id/leave')
@@ -169,11 +177,12 @@ export class TripsController {
         type: TripResponseDto
     })
     @ApiOperation({ summary: 'Leave a trip' })
-    async leaveTrip(
-        @Param('id') id: string,
-        @AuthUser() user: Users
-    ) {
-        return this.tripsService.leaveTrip(id, user._id.toString());
+    async leaveTrip(@Param('id') id: string, @AuthUser() user: Users) {
+        const result = await this.tripsService.leaveTrip(id, user._id.toString());
+
+        return plainToInstance(TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
 
     @Patch(':id/members/:memberId/status')
@@ -191,12 +200,7 @@ export class TripsController {
         @Body() updateMemberStatusDto: UpdateMemberStatusDto,
         @AuthUser() user: Users
     ) {
-        return this.tripsService.updateMemberStatus(
-            id,
-            memberId,
-            updateMemberStatusDto,
-            user._id.toString()
-        );
+        return this.tripsService.updateMemberStatus(id, memberId, updateMemberStatusDto, user._id.toString());
     }
 
     @Delete(':id/members/:memberId')
@@ -230,6 +234,10 @@ export class TripsController {
         @Body() recommendDto: RecommendMembersDto,
         @AuthUser() user: Users
     ) {
-        return this.tripsService.recommendMembers(id, user._id.toString(), recommendDto);
+        const result = await this.tripsService.recommendMembers(id, user._id.toString(), recommendDto);
+
+        return plainToInstance(Users, result, {
+            excludeExtraneousValues: true
+        });
     }
 }

@@ -44,7 +44,7 @@ export class TripsService {
         });
     }
 
-    async createTrip(createTripDto: CreateTripDto, creatorId: string): Promise<TripsDocument> {
+    async createTrip(createTripDto: CreateTripDto, creatorId: string): Promise<any> {
         const trip = new this.tripsModel({
             ...createTripDto,
             createdBy: creatorId,
@@ -62,6 +62,7 @@ export class TripsService {
             .findById(savedTrip._id)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .lean()
             .exec();
 
         if (!populatedTrip) {
@@ -85,11 +86,12 @@ export class TripsService {
             .exec();
     }
 
-    async getTripById(id: string): Promise<TripsDocument> {
+    async getTripById(id: string): Promise<any> {
         const trip = await this.tripsModel
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .lean()
             .exec();
 
         if (!trip) {
@@ -99,7 +101,7 @@ export class TripsService {
         return trip;
     }
 
-    async getMyTrips(userId: string): Promise<TripsDocument[]> {
+    async getMyTrips(userId: string): Promise<any> {
         return await this.tripsModel
             .find({
                 $or: [
@@ -113,10 +115,11 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .sort({ createdAt: -1 })
+            .lean()
             .exec();
     }
 
-    async updateTrip(id: string, updateTripDto: UpdateTripDto, userId: string): Promise<TripsDocument> {
+    async updateTrip(id: string, updateTripDto: UpdateTripDto, userId: string): Promise<any> {
         const trip = await this.tripsModel.findById(id);
 
         if (!trip) {
@@ -131,6 +134,7 @@ export class TripsService {
             .findByIdAndUpdate(id, updateTripDto, { new: true })
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .lean()
             .exec();
 
         if (!updatedTrip) {
@@ -156,7 +160,7 @@ export class TripsService {
         return { message: 'Trip deleted successfully' };
     }
 
-    async searchTrips(destination?: string, startDate?: Date, endDate?: Date): Promise<TripsDocument[]> {
+    async searchTrips(destination?: string, startDate?: Date, endDate?: Date): Promise<any> {
         const query: any = { status: TripStatus.OPEN };
 
         if (destination) {
@@ -175,15 +179,16 @@ export class TripsService {
             }
         }
 
-        return await this.tripsModel
+        return this.tripsModel
             .find(query)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .sort({ createdAt: -1 })
+            .lean()
             .exec();
     }
 
-    async joinTrip(id: string, userId: string, joinTripDto: JoinTripDto): Promise<TripsDocument> {
+    async joinTrip(id: string, userId: string, joinTripDto: JoinTripDto): Promise<any> {
         const trip = await this.tripsModel.findById(id);
 
         if (!trip) {
@@ -225,6 +230,7 @@ export class TripsService {
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .lean()
             .exec();
 
         if (!updatedTrip) {
