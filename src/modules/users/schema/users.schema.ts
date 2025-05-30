@@ -1,5 +1,6 @@
 /* eslint-disable no-invalid-this */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
 
 import { generateHash } from '../../../common/utils';
 import { AuthProvider, Gender, TravelStyle, UserRole } from '../../../constants';
@@ -14,7 +15,7 @@ export class Users extends Document {
 
     @Prop({
         type: String,
-        required: function() {
+        required() {
             return this.authProvider === AuthProvider.LOCAL;
         }
     })
@@ -69,13 +70,28 @@ UsersSchema.index({ trustScore: -1 });
 UsersSchema.index({ isVerified: 1 });
 
 // Virtual for profile completion percentage
-UsersSchema.virtual('profileCompletion').get(function() {
-    const fields = ['fullName', 'email', 'age', 'gender', 'bio', 'languages', 'travelStyle', 'preferredDestinations'];
-    const completedFields = fields.filter(field => {
+UsersSchema.virtual('profileCompletion').get(function () {
+    const fields = [
+        'fullName',
+        'email',
+        'age',
+        'gender',
+        'bio',
+        'languages',
+        'travelStyle',
+        'preferredDestinations'
+    ];
+    const completedFields = fields.filter((field) => {
         const value = this[field];
-        return value !== null && value !== undefined && value !== '' &&
-               (Array.isArray(value) ? value.length > 0 : true);
+
+        return (
+            value !== null &&
+            value !== undefined &&
+            value !== '' &&
+            (Array.isArray(value) ? value.length > 0 : true)
+        );
     });
+
     return Math.round((completedFields.length / fields.length) * 100);
 });
 
@@ -84,5 +100,6 @@ UsersSchema.pre('save', function (next) {
     if (this.authProvider === AuthProvider.LOCAL && this.passwordHash && this.isModified('passwordHash')) {
         this.passwordHash = generateHash(this.passwordHash);
     }
+
     next();
 });
