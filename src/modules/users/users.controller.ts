@@ -13,11 +13,9 @@ import {
     UploadedFile,
     UseInterceptors
 } from '@nestjs/common';
-import { InjectConnection } from '@nestjs/mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
-import { Connection } from 'mongoose';
 import { memoryStorage } from 'multer';
 
 import { ResponseDto } from '../../common/dto';
@@ -31,10 +29,7 @@ import { UsersService } from './users.service';
 @Controller('users')
 @ApiTags('Users')
 export class UsersController {
-    constructor(
-        @InjectConnection() private readonly mongoConnection: Connection,
-        private usersService: UsersService
-    ) {}
+    constructor(private readonly usersService: UsersService) {}
 
     @Get(':id([0-9a-fA-F]{24})')
     @HttpCode(HttpStatus.OK)

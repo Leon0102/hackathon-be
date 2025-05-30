@@ -72,5 +72,5 @@ export class UserResponseDto {
     profileCompletion?: number;
 
     @Expose()
-    avatarUrl?: string;
+    profilePictureUrl?: string;
 }
