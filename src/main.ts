@@ -1,4 +1,5 @@
 import { RequestMethod, ValidationPipe } from '@nestjs/common';
+import * as fs from 'fs';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ExpressAdapter } from '@nestjs/platform-express';
@@ -16,9 +17,19 @@ import { ApiConfigService } from './shared/services/api-config.service';
 import { SharedModule } from './shared/shared.module';
 
 export async function bootstrap(): Promise<NestExpressApplication> {
-    const app = await NestFactory.create<NestExpressApplication>(AppModule, new ExpressAdapter(), {
-        cors: true
-    });
+    // Optional HTTPS configuration
+    const httpsOptions =
+        process.env.SSL_KEY_PATH && process.env.SSL_CERT_PATH
+            ? {
+                  key: fs.readFileSync(process.env.SSL_KEY_PATH),
+                  cert: fs.readFileSync(process.env.SSL_CERT_PATH)
+              }
+            : undefined;
+    const app = await NestFactory.create<NestExpressApplication>(
+        AppModule,
+        new ExpressAdapter(),
+        { cors: true, ...(httpsOptions ? { httpsOptions } : {}) }
+    );
 
     app.setGlobalPrefix('/api', { exclude: [{ path: '/manifest/:startUrl', method: RequestMethod.GET }] });
     app.use(helmet());
@@ -49,11 +60,11 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
     const configService = app.select(SharedModule).get(ApiConfigService);
 
-        setupSwagger(app);
+    setupSwagger(app);
 
     app.use(expressCtx);
 
-        app.enableShutdownHooks();
+    app.enableShutdownHooks();
 
     const port = configService.serverConfig.port;
 
