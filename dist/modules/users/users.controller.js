@@ -17,11 +17,14 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const swagger_1 = require("@nestjs/swagger");
 const mongoose_2 = require("mongoose");
+const platform_express_1 = require("@nestjs/platform-express");
+const multer_1 = require("multer");
+const class_transformer_1 = require("class-transformer");
 const dto_1 = require("../../common/dto");
 const constants_1 = require("../../constants");
 const decorators_1 = require("../../decorators");
 const request_1 = require("./dto/request");
-const response_1 = require("./dto/response");
+const user_response_dto_1 = require("./dto/response/user-response.dto");
 const schema_1 = require("./schema");
 const users_service_1 = require("./users.service");
 let UsersController = class UsersController {
@@ -30,32 +33,42 @@ let UsersController = class UsersController {
         this.usersService = usersService;
     }
     async getUser(id) {
-        return this.usersService.findByIdOrEmail({ id });
+        const user = await this.usersService.findByIdOrEmail({ id });
+        return (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, user.toObject(), { excludeExtraneousValues: true });
     }
     changePassword(changePasswordDto, user) {
         return this.usersService.changePassword(user.email, changePasswordDto);
     }
     async getAllUsers() {
-        return this.usersService.getAllUsers();
+        const users = await this.usersService.getAllUsers();
+        return users.map(u => (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, u.toObject(), { excludeExtraneousValues: true }));
     }
     async getCurrentUserProfile(user) {
-        return this.usersService.getUserByEmail(user.email);
+        const profile = await this.usersService.getUserByEmail(user.email);
+        return profile ? (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, profile, { excludeExtraneousValues: true }) : null;
     }
     async updateProfile(user, updateUserDto) {
-        return this.usersService.updateUserByEmail(user.email, updateUserDto);
+        const updated = await this.usersService.updateUserByEmail(user.email, updateUserDto);
+        return (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, updated.toObject(), { excludeExtraneousValues: true });
     }
     async updateTrustScore(id, trustScore) {
-        return this.usersService.updateTrustScore(id, trustScore);
+        const updated = await this.usersService.updateTrustScore(id, trustScore);
+        return (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, updated.toObject(), { excludeExtraneousValues: true });
     }
     async verifyUser(id) {
-        return this.usersService.verifyUser(id);
+        const updated = await this.usersService.verifyUser(id);
+        return (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, updated.toObject(), { excludeExtraneousValues: true });
     }
     async deleteUser(id) {
         return this.usersService.deleteUser(id);
     }
+    async uploadAvatar(file, user) {
+        const updatedUser = await this.usersService.uploadAvatar(user._id.toString(), file);
+        return { profilePictureUrl: updatedUser.profilePictureUrl };
+    }
 };
 __decorate([
-    (0, common_1.Get)(':id'),
+    (0, common_1.Get)(':id([0-9a-fA-F]{24})'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOkResponse)({
         description: 'Get user by id',
@@ -89,7 +102,7 @@ __decorate([
     (0, common_1.UseInterceptors)(common_1.ClassSerializerInterceptor),
     (0, swagger_1.ApiOkResponse)({
         description: 'Get all users',
-        type: [response_1.UserResponseDto]
+        type: [user_response_dto_1.UserResponseDto]
     }),
     (0, swagger_1.ApiOperation)({ summary: 'Get all users (Admin only)' }),
     __metadata("design:type", Function),
@@ -103,7 +116,7 @@ __decorate([
     (0, common_1.UseInterceptors)(common_1.ClassSerializerInterceptor),
     (0, swagger_1.ApiOkResponse)({
         description: 'Get current user profile',
-        type: response_1.UserResponseDto
+        type: user_response_dto_1.UserResponseDto
     }),
     (0, swagger_1.ApiOperation)({ summary: 'Get current user profile' }),
     __param(0, (0, decorators_1.AuthUser)()),
@@ -118,7 +131,7 @@ __decorate([
     (0, common_1.UseInterceptors)(common_1.ClassSerializerInterceptor),
     (0, swagger_1.ApiOkResponse)({
         description: 'Update user profile',
-        type: response_1.UserResponseDto
+        type: user_response_dto_1.UserResponseDto
     }),
     (0, swagger_1.ApiOperation)({ summary: 'Update user profile' }),
     __param(0, (0, decorators_1.AuthUser)()),
@@ -133,7 +146,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOkResponse)({
         description: 'Update user trust score',
-        type: response_1.UserResponseDto
+        type: user_response_dto_1.UserResponseDto
     }),
     (0, swagger_1.ApiOperation)({ summary: 'Update user trust score (Admin only)' }),
     __param(0, (0, common_1.Param)('id')),
@@ -148,7 +161,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOkResponse)({
         description: 'Verify user',
-        type: response_1.UserResponseDto
+        type: user_response_dto_1.UserResponseDto
     }),
     (0, swagger_1.ApiOperation)({ summary: 'Verify user (Admin only)' }),
     __param(0, (0, common_1.Param)('id')),
@@ -170,6 +183,22 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "deleteUser", null);
+__decorate([
+    (0, common_1.Post)('avatar'),
+    (0, decorators_1.Auth)([constants_1.UserRole.USER, constants_1.UserRole.ADMIN]),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: (0, multer_1.memoryStorage)(),
+        limits: { fileSize: 5 * 1024 * 1024 }
+    })),
+    (0, swagger_1.ApiOperation)({ summary: 'Upload user avatar' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Uploaded avatar URL', type: user_response_dto_1.UserResponseDto }),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, decorators_1.AuthUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, schema_1.Users]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "uploadAvatar", null);
 UsersController = __decorate([
     (0, common_1.Controller)('users'),
     (0, swagger_1.ApiTags)('Users'),

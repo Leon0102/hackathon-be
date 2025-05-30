@@ -13,8 +13,14 @@ const dto_1 = require("../common/dto");
 const response_dto_1 = require("../common/dto/response.dto");
 let WrapResponseInterceptor = class WrapResponseInterceptor {
     intercept(context, next) {
-        const ctx = context.switchToHttp().getResponse();
+        const http = context.switchToHttp();
+        const req = http.getRequest();
+        const ctx = http.getResponse();
         const statusCode = ctx.statusCode;
+        const url = req.originalUrl || req.url;
+        if (url.startsWith('/docs') || url.match(/\.(css|js|png|svg|ico)$/)) {
+            return next.handle();
+        }
         return next.handle().pipe((0, rxjs_1.map)((response) => {
             if (response instanceof response_dto_1.ResponseDto) {
                 return {

@@ -19,12 +19,9 @@ const setup_swagger_1 = require("./setup-swagger");
 const api_config_service_1 = require("./shared/services/api-config.service");
 const shared_module_1 = require("./shared/shared.module");
 async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule, new platform_express_1.ExpressAdapter(), {
-        cors: true
-    });
-    app.setGlobalPrefix('/api', { exclude: [{ path: '/manifest/:startUrl', method: common_1.RequestMethod.GET }] });
-    app.enable('trust proxy');
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, new platform_express_1.ExpressAdapter(), { cors: true });
     app.use((0, helmet_1.default)());
+    app.setGlobalPrefix('/api', { exclude: [{ path: '/manifest/:startUrl', method: common_1.RequestMethod.GET }] });
     app.use((0, express_rate_limit_1.default)({
         windowMs: 15 * 60 * 1000,
         max: 10000
@@ -43,13 +40,9 @@ async function bootstrap() {
         }
     }));
     const configService = app.select(shared_module_1.SharedModule).get(api_config_service_1.ApiConfigService);
-    if (configService.documentationEnabled) {
-        (0, setup_swagger_1.setupSwagger)(app);
-    }
+    (0, setup_swagger_1.setupSwagger)(app);
     app.use(express_ctx_1.middleware);
-    if (!configService.isDevelopment) {
-        app.enableShutdownHooks();
-    }
+    app.enableShutdownHooks();
     const port = configService.serverConfig.port;
     await app.listen(port);
     console.info(`🚀 Server running on: http://localhost:${port}/docs`);

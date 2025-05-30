@@ -9,14 +9,30 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TripResponseDto = exports.TripMemberResponseDto = void 0;
+exports.TripResponseDto = exports.TripMemberResponseDto = exports.TripMemberUserDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const constants_1 = require("../../../../constants");
-class TripMemberResponseDto {
+class TripMemberUserDto {
 }
 __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", String)
+], TripMemberUserDto.prototype, "fullName", void 0);
+__decorate([
+    (0, class_transformer_1.Expose)(),
+    __metadata("design:type", String)
+], TripMemberUserDto.prototype, "email", void 0);
+__decorate([
+    (0, class_transformer_1.Expose)(),
+    __metadata("design:type", String)
+], TripMemberUserDto.prototype, "profilePictureUrl", void 0);
+exports.TripMemberUserDto = TripMemberUserDto;
+class TripMemberResponseDto {
+}
+__decorate([
+    (0, class_transformer_1.Expose)(),
+    (0, class_transformer_1.Type)(() => TripMemberUserDto),
+    __metadata("design:type", TripMemberUserDto)
 ], TripMemberResponseDto.prototype, "user", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
@@ -39,7 +55,8 @@ __decorate([
 ], TripResponseDto.prototype, "_id", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
-    __metadata("design:type", String)
+    (0, class_transformer_1.Type)(() => TripMemberUserDto),
+    __metadata("design:type", TripMemberUserDto)
 ], TripResponseDto.prototype, "createdBy", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),

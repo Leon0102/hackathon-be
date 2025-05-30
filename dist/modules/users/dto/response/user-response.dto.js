@@ -36,10 +36,6 @@ __decorate([
 ], UserResponseDto.prototype, "authProvider", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
-    __metadata("design:type", String)
-], UserResponseDto.prototype, "profilePictureUrl", void 0);
-__decorate([
-    (0, class_transformer_1.Expose)(),
     __metadata("design:type", Number)
 ], UserResponseDto.prototype, "age", void 0);
 __decorate([
@@ -90,5 +86,9 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", Number)
 ], UserResponseDto.prototype, "profileCompletion", void 0);
+__decorate([
+    (0, class_transformer_1.Expose)(),
+    __metadata("design:type", String)
+], UserResponseDto.prototype, "avatarUrl", void 0);
 exports.UserResponseDto = UserResponseDto;
 //# sourceMappingURL=user-response.dto.js.map

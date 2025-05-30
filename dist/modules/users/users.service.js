@@ -17,12 +17,14 @@ const common_1 = require("@nestjs/common");
 const exceptions_1 = require("@nestjs/common/exceptions");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
+const client_s3_1 = require("@aws-sdk/client-s3");
 const dto_1 = require("../../common/dto");
 const constants_1 = require("../../constants");
 const schema_1 = require("./schema");
 let UsersService = class UsersService {
     constructor(usersModel) {
         this.usersModel = usersModel;
+        this.s3Client = new client_s3_1.S3Client({ region: process.env.AWS_REGION });
     }
     async createUser(createUserDto) {
         const user = await this.usersModel.findOne({ email: createUserDto.email });
@@ -36,7 +38,7 @@ let UsersService = class UsersService {
         return this.usersModel.findOne(query);
     }
     async getUserByEmail(email) {
-        return this.usersModel.findOne({ email });
+        return this.usersModel.findOne({ email }).lean().exec();
     }
     async findByIdOrEmail({ id, email }) {
         const user = await this.usersModel.findOne({ $or: [{ _id: id }, { email }] });
@@ -74,10 +76,10 @@ let UsersService = class UsersService {
         throw new common_1.BadRequestException(constants_1.ErrorCode.PASSWORD_NOT_UPDATED);
     }
     async getAllUsers() {
-        return this.usersModel.find().select('-passwordHash').exec();
+        return this.usersModel.find().select('-passwordHash').lean().exec();
     }
     async getUserById(userId) {
-        const user = await this.usersModel.findById(userId).select('-passwordHash').exec();
+        const user = await this.usersModel.findById(userId).select('-passwordHash').lean().exec();
         if (!user) {
             throw new exceptions_1.NotFoundException(constants_1.ErrorCode.USER_NOT_FOUND);
         }
@@ -109,14 +111,38 @@ let UsersService = class UsersService {
         if (!user) {
             throw new exceptions_1.NotFoundException(constants_1.ErrorCode.USER_NOT_FOUND);
         }
-        return user;
+        return user.toObject();
     }
     async deleteUser(userId) {
         const result = await this.usersModel.findByIdAndDelete(userId).exec();
         if (!result) {
             throw new exceptions_1.NotFoundException(constants_1.ErrorCode.USER_NOT_FOUND);
         }
-        return new dto_1.ResponseDto({ messageCode: constants_1.SuccessCode.USER_DELETED || 'USER_DELETED' });
+        return new dto_1.ResponseDto({ statusCode: common_1.HttpStatus.OK, messageCode: constants_1.SuccessCode.USER_DELETED });
+    }
+    async uploadAvatar(userId, file) {
+        if (!file) {
+            throw new common_1.BadRequestException('No file provided');
+        }
+        const bucket = process.env.AWS_S3_BUCKET;
+        const ext = file.originalname.split('.').pop();
+        const key = `avatars/${userId}-${Date.now()}.${ext}`;
+        await this.s3Client.send(new client_s3_1.PutObjectCommand({
+            Bucket: bucket,
+            Key: key,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+            ACL: 'public-read'
+        }));
+        const url = `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+        const updated = await this.usersModel
+            .findByIdAndUpdate(userId, { profilePictureUrl: url }, { new: true })
+            .select('-passwordHash')
+            .exec();
+        if (!updated) {
+            throw new exceptions_1.NotFoundException('User not found');
+        }
+        return updated.toObject();
     }
 };
 UsersService = __decorate([

@@ -1,6 +1,5 @@
 /* eslint-disable no-invalid-this */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
 
 import { generateHash } from '../../../common/utils';
 import { AuthProvider, Gender, TravelStyle, UserRole } from '../../../constants';

@@ -6,29 +6,29 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TripsModule = void 0;
+exports.GroupsModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const trips_schema_1 = require("./schema/trips.schema");
-const recommendation_log_schema_1 = require("./schema/recommendation-log.schema");
+const groups_service_1 = require("./groups.service");
+const groups_controller_1 = require("./groups.controller");
+const group_schema_1 = require("./schema/group.schema");
+const trips_schema_1 = require("../trips/schema/trips.schema");
 const users_schema_1 = require("../users/schema/users.schema");
-const trips_controller_1 = require("./trips.controller");
-const trips_service_1 = require("./trips.service");
-let TripsModule = class TripsModule {
+let GroupsModule = class GroupsModule {
 };
-TripsModule = __decorate([
+GroupsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forFeature([
+                { name: group_schema_1.Group.name, schema: group_schema_1.GroupSchema },
                 { name: trips_schema_1.Trips.name, schema: trips_schema_1.TripsSchema },
-                { name: recommendation_log_schema_1.RecommendationLog.name, schema: recommendation_log_schema_1.RecommendationLogSchema },
-                { name: users_schema_1.Users.name, schema: users_schema_1.UsersSchema }
+                { name: users_schema_1.Users.name, schema: users_schema_1.UsersSchema },
             ])
         ],
-        controllers: [trips_controller_1.TripsController],
-        providers: [trips_service_1.TripsService],
-        exports: [trips_service_1.TripsService]
+        providers: [groups_service_1.GroupsService],
+        controllers: [groups_controller_1.GroupsController],
+        exports: [groups_service_1.GroupsService]
     })
-], TripsModule);
-exports.TripsModule = TripsModule;
-//# sourceMappingURL=trips.module.js.map
+], GroupsModule);
+exports.GroupsModule = GroupsModule;
+//# sourceMappingURL=groups.module.js.map

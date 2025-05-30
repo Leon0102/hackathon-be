@@ -35,7 +35,7 @@ export class AuthController {
         const userEntity = await this.authService.validateUser(userLoginDto);
 
         const token = await this.authService.createAccessToken({
-            userId: userEntity.id,
+            userId: userEntity._id.toString(),
             role: userEntity.role
         });
 

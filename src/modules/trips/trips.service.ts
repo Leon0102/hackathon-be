@@ -8,24 +8,35 @@ import { RecommendMembersDto } from './dto/request/recommend-members.dto';
 import { TripStatus, MemberStatus } from '../../constants';
 import { RecommendationLog } from './schema/recommendation-log.schema';
 import { Users } from '../users/schema/users.schema';
-import OpenAI from 'openai';
+import { AzureOpenAI } from 'openai';
+import { DefaultAzureCredential, getBearerTokenProvider } from '@azure/identity';
+import '@azure/openai/types';
 
 @Injectable()
 export class TripsService {
-    private openai: OpenAI;
+    private openai: AzureOpenAI;
 
     constructor(
         @InjectModel(Trips.name) private readonly tripsModel: Model<TripsDocument>,
         @InjectModel(RecommendationLog.name) private readonly recLogModel: Model<RecommendationLog>,
         @InjectModel(Users.name) private readonly userModel: Model<Users>
     ) {
-        this.openai = new OpenAI({
-            apiKey: process.env.AZURE_OPENAI_KEY,
-            baseURL: 'https://leon.openai.azure.com/openai/deployments/' + process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
-            defaultQuery: { 'api-version': '2024-02-01' },
-            defaultHeaders: {
-                'api-key': process.env.AZURE_OPENAI_KEY,
-            },
+        // Initialize Azure OpenAI client with proper authentication
+        const apiKey = process.env.AZURE_OPENAI_KEY;
+        const endpoint = `https://${process.env.AZURE_OPENAI_RESOURCE_NAME}.openai.azure.com`;
+        const deployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
+        const apiVersion = "2024-10-21";
+
+        if (!apiKey || !process.env.AZURE_OPENAI_RESOURCE_NAME || !deployment) {
+            throw new Error('Azure OpenAI configuration is missing. Please check AZURE_OPENAI_KEY, AZURE_OPENAI_RESOURCE_NAME, and AZURE_OPENAI_DEPLOYMENT_NAME environment variables.');
+        }
+
+        // For key-based authentication (suitable for development)
+        this.openai = new AzureOpenAI({
+            apiKey,
+            endpoint,
+            deployment,
+            apiVersion
         });
     }
 
@@ -347,28 +358,50 @@ export class TripsService {
         // Fetch candidate users not already on the trip
         const candidates = await this.userModel.find({ _id: { $nin: excludedIds } }).exec();
 
-        // Use OpenAI to recommend best matching user IDs
+        // Use Azure OpenAI to recommend best matching user IDs
         const profiles = candidates.map(u => `ID: ${u._id}, Name: ${u.fullName}, Tags: ${(u.tags||[]).join(', ')}, Bio: ${u.bio}`).join('\n');
         const prompt = `Recommend up to 5 user IDs best matching keyword "${dto.keyword}" from the users list:\n${profiles}`;
-        const completion = await this.openai.chat.completions.create({
-            model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME!,
-            messages: [{ role: 'user', content: prompt }]
-        });
-        let recommendedIds: string[] = [];
+
         try {
-            recommendedIds = JSON.parse(completion.choices[0].message.content!);
-        } catch {
+            const completion = await this.openai.chat.completions.create({
+                messages: [{ role: 'user', content: prompt }],
+                model: "", // Empty string when using deployment
+                max_tokens: 128
+            });
+
+            let recommendedIds: string[] = [];
+            try {
+                const responseContent = completion.choices[0]?.message?.content;
+                if (responseContent) {
+                    recommendedIds = JSON.parse(responseContent);
+                }
+            } catch {
+                // fallback to simple tag match
+                const keywordLower = dto.keyword.toLowerCase();
+                recommendedIds = candidates.filter(u =>
+                    Array.isArray(u.tags) && u.tags.some(tag => tag.toLowerCase().includes(keywordLower))
+                ).map(u => u._id.toString());
+            }
+
+            let recommended = candidates.filter(u => recommendedIds.includes(u._id.toString()));
+            if (recommended.length === 0) {
+                // fallback to simple search
+                recommended = candidates.slice(0, 5);
+            }
+            return recommended;
+        } catch (error) {
+            console.error('Azure OpenAI API error:', error);
             // fallback to simple tag match
             const keywordLower = dto.keyword.toLowerCase();
-            recommendedIds = candidates.filter(u =>
+            const recommended = candidates.filter(u =>
                 Array.isArray(u.tags) && u.tags.some(tag => tag.toLowerCase().includes(keywordLower))
-            ).map(u => u._id.toString());
+            ).slice(0, 5);
+
+            if (recommended.length === 0) {
+                return candidates.slice(0, 5);
+            }
+            return recommended;
         }
-        let recommended = candidates.filter(u => recommendedIds.includes(u._id.toString()));
-        if (recommended.length === 0) {
-            recommended = candidates.slice(0, 5);
-        }
-        return recommended;
     }
 
 }

@@ -24,6 +24,7 @@ const trips_module_1 = require("./modules/trips/trips.module");
 const users_module_1 = require("./modules/users/users.module");
 const api_config_service_1 = require("./shared/services/api-config.service");
 const shared_module_1 = require("./shared/shared.module");
+const groups_module_1 = require("./modules/groups/groups.module");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -62,6 +63,7 @@ AppModule = __decorate([
             reviews_module_1.ReviewsModule,
             reports_module_1.ReportsModule,
             admins_module_1.AdminsModule,
+            groups_module_1.GroupsModule,
             schedule_1.ScheduleModule.forRoot()
         ],
         providers: []

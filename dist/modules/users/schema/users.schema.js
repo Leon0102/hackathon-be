@@ -81,6 +81,10 @@ __decorate([
     (0, mongoose_1.Prop)({ type: String, enum: constants_1.UserRole, default: constants_1.UserRole.USER }),
     __metadata("design:type", String)
 ], Users.prototype, "role", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], Users.prototype, "tags", void 0);
 Users = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Users);

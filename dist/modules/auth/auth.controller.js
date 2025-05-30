@@ -32,7 +32,7 @@ let AuthController = class AuthController {
     async userLogin(userLoginDto) {
         const userEntity = await this.authService.validateUser(userLoginDto);
         const token = await this.authService.createAccessToken({
-            userId: userEntity.id,
+            userId: userEntity._id.toString(),
             role: userEntity.role
         });
         return new dto_2.LoginPayloadDto(userEntity, token);

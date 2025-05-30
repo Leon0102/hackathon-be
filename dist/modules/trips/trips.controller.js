@@ -18,7 +18,7 @@ const swagger_1 = require("@nestjs/swagger");
 const dto_1 = require("../../common/dto");
 const constants_1 = require("../../constants");
 const decorators_1 = require("../../decorators");
-const schema_1 = require("../users/schema");
+const users_schema_1 = require("../users/schema/users.schema");
 const request_1 = require("./dto/request");
 const response_1 = require("./dto/response");
 const trips_service_1 = require("./trips.service");
@@ -60,6 +60,9 @@ let TripsController = class TripsController {
     async removeMember(id, memberId, user) {
         return this.tripsService.removeMember(id, memberId, user._id.toString());
     }
+    async recommendMembers(id, recommendDto, user) {
+        return this.tripsService.recommendMembers(id, user._id.toString(), recommendDto);
+    }
 };
 __decorate([
     (0, common_1.Post)(),
@@ -75,7 +78,7 @@ __decorate([
     __param(1, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [request_1.CreateTripDto,
-        schema_1.Users]),
+        users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "createTrip", null);
 __decorate([
@@ -107,7 +110,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get my trips' }),
     __param(0, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [schema_1.Users]),
+    __metadata("design:paramtypes", [users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "getMyTrips", null);
 __decorate([
@@ -159,7 +162,7 @@ __decorate([
     __param(2, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, request_1.UpdateTripDto,
-        schema_1.Users]),
+        users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "updateTrip", null);
 __decorate([
@@ -174,7 +177,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, schema_1.Users]),
+    __metadata("design:paramtypes", [String, users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "deleteTrip", null);
 __decorate([
@@ -192,7 +195,7 @@ __decorate([
     __param(2, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, request_1.JoinTripDto,
-        schema_1.Users]),
+        users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "joinTrip", null);
 __decorate([
@@ -208,7 +211,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, schema_1.Users]),
+    __metadata("design:paramtypes", [String, users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "leaveTrip", null);
 __decorate([
@@ -227,7 +230,7 @@ __decorate([
     __param(3, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, request_1.UpdateMemberStatusDto,
-        schema_1.Users]),
+        users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "updateMemberStatus", null);
 __decorate([
@@ -244,9 +247,27 @@ __decorate([
     __param(1, (0, common_1.Param)('memberId')),
     __param(2, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, schema_1.Users]),
+    __metadata("design:paramtypes", [String, String, users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "removeMember", null);
+__decorate([
+    (0, common_1.Post)(':id/recommend'),
+    (0, decorators_1.Auth)([constants_1.UserRole.USER, constants_1.UserRole.ADMIN]),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseInterceptors)(common_1.ClassSerializerInterceptor),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Recommend members for a trip based on keyword',
+        type: [users_schema_1.Users]
+    }),
+    (0, swagger_1.ApiOperation)({ summary: 'Recommend members for a trip' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, decorators_1.AuthUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, request_1.RecommendMembersDto,
+        users_schema_1.Users]),
+    __metadata("design:returntype", Promise)
+], TripsController.prototype, "recommendMembers", null);
 TripsController = __decorate([
     (0, common_1.Controller)('trips'),
     (0, swagger_1.ApiTags)('Trips'),
