@@ -13,8 +13,6 @@ services:
 
   # Main NestJS application
   app:
-    env_file:
-      - .env
     container_name: awesome_nest_boilerplate
     restart: always
     build: .
@@ -22,6 +20,7 @@ services:
       - "$PORT:$PORT"
     depends_on:
       - redis
+    environment:
 
 volumes:
   redis_data:

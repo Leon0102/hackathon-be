@@ -31,11 +31,17 @@ export class AuthService {
     async createAccessToken(data: { role: UserRole; userEmail: string }): Promise<TokenPayloadDto> {
         return new TokenPayloadDto({
             expiresIn: this.configService.authConfig.jwtExpirationTime,
-            accessToken: await this.jwtService.signAsync({
-                userEmail: data.userEmail,
-                type: Token.ACCESS_TOKEN,
-                role: data.role
-            }),
+            accessToken: await this.jwtService.signAsync(
+                {
+                    userEmail: data.userEmail,
+                    type: Token.ACCESS_TOKEN,
+                    role: data.role
+                },
+                {
+                    // set expired date access token
+                    expiresIn: this.configService.authConfig.jwtExpirationTime
+                }
+            ),
             refreshToken: await this.jwtService.signAsync(
                 {
                     userEmail: data.userEmail,
