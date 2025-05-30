@@ -1,0 +1,137 @@
+name: deploy-staging
+env:
+    EB_PACKAGE_S3_BUCKET_NAME: 'nestjs-monolithic-boilerplate-staging-artifacts'
+    EB_APPLICATION_NAME: 'nestjs-monolithic-boilerplate'
+    EB_ENVIRONMENT_NAME: 'nestjs-monolithic-boilerplate-api-staging-env'
+    EB_VERSION_LABEL: 'Ver-staging-${{ github.sha }}'
+    DEPLOY_PACKAGE_NAME: 'api-nestjs-monolithic-boilerplate-staging-${{ github.sha }}.zip'
+    AWS_REGION_NAME: 'ap-southeast-1'
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - staging
+
+jobs:
+    build:
+        name: build api.staging.nestjs-monolithic-boilerplate
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                node-version: [ 16.x ]
+        steps:
+            -   name: checkout code
+                uses: actions/checkout@master
+                with:
+                    ref: ${{ github.ref }}
+
+            -   name: use node.js ${{ matrix.node-version }}
+                uses: actions/setup-node@master
+                with:
+                    always-auth: true
+                    node-version: ${{ matrix.node-version }}
+
+            -   name: Make envfile
+                uses: SpicyPizza/create-envfile@v1.3
+                with:
+                    envkey_NODE_ENV: 'development'
+                    envkey_ENABLE_DOCUMENTATION: true
+                    envkey_ENABLE_ORM_LOGS: true
+                    envkey_TRANSPORT_PORT: 8080
+                    envkey_JWT_EXPIRATION_TIME: 3600
+                    envkey_FALLBACK_LANGUAGE: 'en_US'
+                    envkey_ENABLE_SYNCHRONIZE: false
+                    envkey_PORT: 80
+                    envkey_API_VERSION: ${{ secrets.STAGING_API_VERSION }}
+
+                    envkey_DB_TYPE: 'postgres'
+                    envkey_DB_DATABASE: ${{ secrets.STAGING_DB_DATABASE }}
+                    envkey_DB_HOST: ${{ secrets.STAGING_DB_HOST }}
+                    envkey_DB_PORT: ${{ secrets.STAGING_DB_PORT }}
+                    envkey_DB_USERNAME: ${{ secrets.STAGING_DB_USERNAME }}
+                    envkey_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+
+                    envkey_AWS_S3_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                    envkey_AWS_S3_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+                    envkey_AWS_S3_BUCKET_NAME: ${{ secrets.STAGING_AWS_S3_BUCKET_NAME }}
+                    envkey_AWS_S3_BUCKET_REGION: ${{ secrets.STAGING_AWS_S3_BUCKET_REGION }}
+                    envkey_AWS_S3_BUCKET_ENDPOINT: ${{ secrets.STAGING_AWS_S3_BUCKET_ENDPOINT }}
+
+                    envkey_AWS_SES_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_SES_ACCESS_KEY_ID }}
+                    envkey_AWS_SES_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SES_SECRET_ACCESS_KEY }}
+                    envkey_AWS_SES_REGION: ${{ secrets.STAGING_AWS_SES_REGION }}
+                    envkey_AWS_SES_SOURCE: ${{ secrets.STAGING_AWS_SES_SOURCE }}
+
+                    envkey_GOOGLE_AUTH_CLIENT_ID: ${{ secrets.STAGING_GOOGLE_AUTH_CLIENT_ID }}
+                    envkey_GOOGLE_AUTH_CLIENT_SECRET: ${{ secrets.STAGING_GOOGLE_AUTH_CLIENT_SECRET }}
+                    envkey_APPLE_AUTH_CLIENT_ID: ${{ secrets.STAGING_APPLE_AUTH_CLIENT_ID }}
+                    envkey_APPLE_AUTH_CLIENT_SECRET: ${{ secrets.STAGING_APPLE_AUTH_CLIENT_SECRET }}
+
+                    envkey_JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+                    envkey_JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
+                    envkey_OTP_SECRET: ${{ secrets.OTP_SECRET }}
+
+                    file_name: '.env'
+
+            -   name: install dependencies
+                run: npm install --force
+
+#            -   name: audit fix
+#                run: npm audit fix --force
+
+            -   name: build application
+                run: npm run build:prod
+
+            -   name: ls
+                run: ls -lah && cat .env
+
+            -   name: create ZIP deployment package
+                run: zip -r ${{ env.DEPLOY_PACKAGE_NAME }} * .platform .env
+
+            -   name: configure AWS credentials
+                uses: aws-actions/configure-aws-credentials@v1
+                with:
+                    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                    aws-region: ${{ env.AWS_REGION_NAME }}
+
+            -   name: copy deployment package to S3 bucket
+                run: aws s3 cp ${{ env.DEPLOY_PACKAGE_NAME }} s3://${{ env.EB_PACKAGE_S3_BUCKET_NAME }}/
+
+    deploy:
+        needs: [ build ]
+        runs-on: ubuntu-latest
+        steps:
+            -   name: configure AWS credentials
+                uses: aws-actions/configure-aws-credentials@v1
+                with:
+                    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                    aws-region: ${{ env.AWS_REGION_NAME }}
+
+            -   name: create new Elastic Beanstalk application version
+                run: |
+                    aws elasticbeanstalk create-application-version \
+                    --application-name ${{ env.EB_APPLICATION_NAME }} \
+                    --source-bundle S3Bucket="${{ env.EB_PACKAGE_S3_BUCKET_NAME }}",S3Key="${{ env.DEPLOY_PACKAGE_NAME }}" \
+                    --version-label ${{ env.EB_VERSION_LABEL }} \
+                    --description "CommittSHA-${{ github.sha }}"
+
+            -   name: update Elastic Beanstalk with new application version
+                run: |
+                    aws elasticbeanstalk update-application-version \
+                    --application-name ${{ env.EB_APPLICATION_NAME }} \
+                    --version-label ${{ env.EB_VERSION_LABEL }}
+
+            -   name: debug credentials
+                run: |
+                    echo "${{ secrets.AWS_ACCESS_KEY_ID }}"
+
+            -   name: deploy application to Elastic Beanstalk
+                run: |
+                    aws elasticbeanstalk update-environment \
+                    --application-name ${{ env.EB_APPLICATION_NAME }} \
+                    --environment-name ${{ env.EB_ENVIRONMENT_NAME }} \
+                    --version-label ${{ env.EB_VERSION_LABEL }}
