@@ -17,6 +17,9 @@ import { Group, GroupSchema } from './schema/group.schema';
     ],
     providers: [GroupsService],
     controllers: [GroupsController],
-    exports: [GroupsService]
+    exports: [
+        GroupsService,
+        MongooseModule // Export MongooseModule to provide Group model
+    ]
 })
 export class GroupsModule {}
