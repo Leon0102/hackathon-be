@@ -18,9 +18,6 @@ export class UserResponseDto {
     authProvider: AuthProvider;
 
     @Expose()
-    profilePictureUrl?: string;
-
-    @Expose()
     age?: number;
 
     @Expose()

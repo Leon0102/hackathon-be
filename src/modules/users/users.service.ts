@@ -185,7 +185,7 @@ export class UsersService {
         const url = `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
         // update user record
         const updated = await this.usersModel
-            .findByIdAndUpdate(userId, { avatarUrl: url }, { new: true })
+            .findByIdAndUpdate(userId, { profilePictureUrl: url }, { new: true })
             .select('-passwordHash')
             .exec();
         if (!updated) {

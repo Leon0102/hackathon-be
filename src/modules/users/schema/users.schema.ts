@@ -27,9 +27,6 @@ export class Users extends Document {
     @Prop({ type: String, default: null })
     profilePictureUrl: string;
 
-    @Prop({ type: String, default: null })
-    avatarUrl: string;
-
     @Prop({ type: Number, min: 18, max: 120 })
     age: number;
 

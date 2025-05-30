@@ -35,7 +35,7 @@ export class UsersController {
         private usersService: UsersService
     ) {}
 
-    @Get(':id')
+    @Get(':id([0-9a-fA-F]{24})')
     @HttpCode(HttpStatus.OK)
     @ApiOkResponse({
         description: 'Get user by id',
@@ -146,6 +146,7 @@ export class UsersController {
         @UploadedFile() file: Express.Multer.File,
         @AuthUser() user: Users
     ) {
-        return this.usersService.uploadAvatar(user._id.toString(), file);
+        const updatedUser = await this.usersService.uploadAvatar(user._id.toString(), file);
+        return { profilePictureUrl: updatedUser.profilePictureUrl };
     }
 }

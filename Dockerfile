@@ -1,18 +1,18 @@
-FROM --platform=linux/amd64  node:lts AS dist
+FROM node:lts AS dist
 COPY package.json yarn.lock ./
 
 RUN yarn install
 
 COPY . ./
 
-RUN yarn build:prod
+RUN yarn build
 
-FROM --platform=linux/amd64  node:lts AS node_modules
+FROM node:lts AS node_modules
 COPY package.json yarn.lock ./
 
 RUN yarn install --prod
 
-FROM --platform=linux/amd64 node:lts
+FROM node:lts
 
 ARG PORT=4000
 
