@@ -14,11 +14,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
-const mongoose_1 = require("@nestjs/mongoose");
 const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
-const mongoose_2 = require("mongoose");
 const multer_1 = require("multer");
 const dto_1 = require("../../common/dto");
 const constants_1 = require("../../constants");
@@ -28,8 +26,7 @@ const user_response_dto_1 = require("./dto/response/user-response.dto");
 const schema_1 = require("./schema");
 const users_service_1 = require("./users.service");
 let UsersController = class UsersController {
-    constructor(mongoConnection, usersService) {
-        this.mongoConnection = mongoConnection;
+    constructor(usersService) {
         this.usersService = usersService;
     }
     async getUser(id) {
@@ -202,9 +199,7 @@ __decorate([
 UsersController = __decorate([
     (0, common_1.Controller)('users'),
     (0, swagger_1.ApiTags)('Users'),
-    __param(0, (0, mongoose_1.InjectConnection)()),
-    __metadata("design:paramtypes", [mongoose_2.Connection,
-        users_service_1.UsersService])
+    __metadata("design:paramtypes", [users_service_1.UsersService])
 ], UsersController);
 exports.UsersController = UsersController;
 //# sourceMappingURL=users.controller.js.map

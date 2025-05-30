@@ -99,6 +99,6 @@ __decorate([
 __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", String)
-], UserResponseDto.prototype, "avatarUrl", void 0);
+], UserResponseDto.prototype, "profilePictureUrl", void 0);
 exports.UserResponseDto = UserResponseDto;
 //# sourceMappingURL=user-response.dto.js.map

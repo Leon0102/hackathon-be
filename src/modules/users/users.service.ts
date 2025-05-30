@@ -1,19 +1,21 @@
-import { BadRequestException, Injectable, HttpStatus } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConflictException, NotFoundException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 import { ResponseDto } from '../../common/dto';
 import { ErrorCode, SuccessCode } from '../../constants';
+import type { IFile } from '../../interfaces';
+import { AwsS3Service } from '../../shared/services/aws-s3.service';
 import type { UserRegisterDto } from '../auth/dto';
 import type { ChangePasswordDto, ResetPasswordDto } from './dto/request';
-import { Users } from './schema';
+import { Users } from './schema/users.schema';
 @Injectable()
 export class UsersService {
-    constructor(@InjectModel(Users.name) private readonly usersModel: Model<Users>) {}
-
-    private s3Client = new S3Client({ region: process.env.AWS_REGION });
+    constructor(
+        @InjectModel(Users.name) private readonly usersModel: Model<Users>,
+        private readonly awsS3Service: AwsS3Service
+    ) {}
 
     async createUser(createUserDto: UserRegisterDto): Promise<Users> {
         const user = await this.usersModel.findOne({ email: createUserDto.email });
@@ -103,11 +105,10 @@ export class UsersService {
     }
 
     async updateUser(userId: string, updateUserDto: any): Promise<Users> {
-        const user = await this.usersModel.findByIdAndUpdate(
-            userId,
-            updateUserDto,
-            { new: true, runValidators: true }
-        ).select('-passwordHash').exec();
+        const user = await this.usersModel
+            .findByIdAndUpdate(userId, updateUserDto, { new: true, runValidators: true })
+            .select('-passwordHash')
+            .exec();
 
         if (!user) {
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
@@ -117,11 +118,10 @@ export class UsersService {
     }
 
     async updateUserByEmail(email: string, updateUserDto: any): Promise<Users> {
-        const user = await this.usersModel.findOneAndUpdate(
-            { email },
-            updateUserDto,
-            { new: true, runValidators: true }
-        ).select('-passwordHash').exec();
+        const user = await this.usersModel
+            .findOneAndUpdate({ email }, updateUserDto, { new: true, runValidators: true })
+            .select('-passwordHash')
+            .exec();
 
         if (!user) {
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
@@ -131,11 +131,10 @@ export class UsersService {
     }
 
     async updateTrustScore(userId: string, newScore: number): Promise<Users> {
-        const user = await this.usersModel.findByIdAndUpdate(
-            userId,
-            { trustScore: newScore },
-            { new: true }
-        ).select('-passwordHash').exec();
+        const user = await this.usersModel
+            .findByIdAndUpdate(userId, { trustScore: newScore }, { new: true })
+            .select('-passwordHash')
+            .exec();
 
         if (!user) {
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
@@ -145,11 +144,10 @@ export class UsersService {
     }
 
     async verifyUser(userId: string): Promise<Users> {
-        const user = await this.usersModel.findByIdAndUpdate(
-            userId,
-            { isVerified: true },
-            { new: true }
-        ).select('-passwordHash').exec();
+        const user = await this.usersModel
+            .findByIdAndUpdate(userId, { isVerified: true }, { new: true })
+            .select('-passwordHash')
+            .exec();
 
         if (!user) {
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
@@ -172,28 +170,30 @@ export class UsersService {
         if (!file) {
             throw new BadRequestException('No file provided');
         }
-        const bucket = process.env.AWS_S3_BUCKET;
-        const ext = file.originalname.split('.').pop();
-        const key = `avatars/${userId}-${Date.now()}.${ext}`;
-        // upload to S3
-        await this.s3Client.send(
-            new PutObjectCommand({
-                Bucket: bucket,
-                Key: key,
-                Body: file.buffer,
-                ContentType: file.mimetype,
-                ACL: 'public-read'
-            })
-        );
-        const url = `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-        // update user record
+
+        // Convert Express.Multer.File to IFile format
+        const fileData: IFile = {
+            encoding: file.encoding,
+            buffer: file.buffer,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype,
+            originalname: file.originalname,
+            size: file.size
+        };
+
+        // Upload using AwsS3Service
+        const url = await this.awsS3Service.uploadImage(fileData);
+
+        // Update user record
         const updated = await this.usersModel
             .findByIdAndUpdate(userId, { profilePictureUrl: url }, { new: true })
             .select('-passwordHash')
             .exec();
+
         if (!updated) {
             throw new NotFoundException('User not found');
         }
+
         return updated.toObject();
     }
 }

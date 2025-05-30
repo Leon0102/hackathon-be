@@ -13,15 +13,15 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TripsService = void 0;
+require("@azure/openai/types");
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
-const trips_schema_1 = require("./schema/trips.schema");
-const constants_1 = require("../../constants");
-const recommendation_log_schema_1 = require("./schema/recommendation-log.schema");
-const users_schema_1 = require("../users/schema/users.schema");
 const openai_1 = require("openai");
-require("@azure/openai/types");
+const constants_1 = require("../../constants");
+const users_schema_1 = require("../users/schema/users.schema");
+const recommendation_log_schema_1 = require("./schema/recommendation-log.schema");
+const trips_schema_1 = require("./schema/trips.schema");
 let TripsService = class TripsService {
     constructor(tripsModel, recLogModel, userModel) {
         this.tripsModel = tripsModel;
@@ -30,7 +30,7 @@ let TripsService = class TripsService {
         const apiKey = process.env.AZURE_OPENAI_KEY;
         const endpoint = `https://${process.env.AZURE_OPENAI_RESOURCE_NAME}.openai.azure.com`;
         const deployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
-        const apiVersion = "2024-10-21";
+        const apiVersion = '2024-10-21';
         if (!apiKey || !process.env.AZURE_OPENAI_RESOURCE_NAME || !deployment) {
             throw new Error('Azure OpenAI configuration is missing. Please check AZURE_OPENAI_KEY, AZURE_OPENAI_RESOURCE_NAME, and AZURE_OPENAI_DEPLOYMENT_NAME environment variables.');
         }
@@ -42,11 +42,13 @@ let TripsService = class TripsService {
         });
     }
     async createTrip(createTripDto, creatorId) {
-        const trip = new this.tripsModel(Object.assign(Object.assign({}, createTripDto), { createdBy: creatorId, members: [{
+        const trip = new this.tripsModel(Object.assign(Object.assign({}, createTripDto), { createdBy: creatorId, members: [
+                {
                     user: new mongoose_2.Types.ObjectId(creatorId),
                     status: constants_1.MemberStatus.JOINED,
                     joinedAt: new Date()
-                }] }));
+                }
+            ] }));
         const savedTrip = await trip.save();
         const populatedTrip = await this.tripsModel
             .findById(savedTrip._id)
@@ -60,7 +62,7 @@ let TripsService = class TripsService {
     }
     async getAllTrips(page = 1, limit = 10) {
         const skip = (page - 1) * limit;
-        const trips = await this.tripsModel
+        return await this.tripsModel
             .find({ status: constants_1.TripStatus.OPEN })
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
@@ -69,7 +71,6 @@ let TripsService = class TripsService {
             .limit(limit)
             .lean()
             .exec();
-        return trips;
     }
     async getTripById(id) {
         const trip = await this.tripsModel
@@ -83,18 +84,20 @@ let TripsService = class TripsService {
         return trip;
     }
     async getMyTrips(userId) {
-        const trips = await this.tripsModel
+        return await this.tripsModel
             .find({
             $or: [
                 { createdBy: userId },
-                { 'members.user': userId, 'members.status': { $in: [constants_1.MemberStatus.JOINED, constants_1.MemberStatus.INVITED] } }
+                {
+                    'members.user': userId,
+                    'members.status': { $in: [constants_1.MemberStatus.JOINED, constants_1.MemberStatus.INVITED] }
+                }
             ]
         })
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .sort({ createdAt: -1 })
             .exec();
-        return trips;
     }
     async updateTrip(id, updateTripDto, userId) {
         const trip = await this.tripsModel.findById(id);
@@ -139,13 +142,12 @@ let TripsService = class TripsService {
                 query.$and.push({ endDate: { $lte: endDate } });
             }
         }
-        const trips = await this.tripsModel
+        return await this.tripsModel
             .find(query)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .sort({ createdAt: -1 })
             .exec();
-        return trips;
     }
     async joinTrip(id, userId, joinTripDto) {
         const trip = await this.tripsModel.findById(id);
@@ -155,11 +157,11 @@ let TripsService = class TripsService {
         if (trip.status !== constants_1.TripStatus.OPEN) {
             throw new common_1.BadRequestException('Trip is not open for joining');
         }
-        const existingMember = trip.members.find(member => member.user.toString() === userId);
+        const existingMember = trip.members.find((member) => member.user.toString() === userId);
         if (existingMember) {
             throw new common_1.BadRequestException('You are already a member of this trip');
         }
-        const joinedMembers = trip.members.filter(member => member.status === constants_1.MemberStatus.JOINED);
+        const joinedMembers = trip.members.filter((member) => member.status === constants_1.MemberStatus.JOINED);
         if (joinedMembers.length >= trip.maxParticipants) {
             throw new common_1.BadRequestException('Trip is full');
         }
@@ -189,7 +191,7 @@ let TripsService = class TripsService {
         if (trip.createdBy.toString() === userId) {
             throw new common_1.BadRequestException('Trip creator cannot leave the trip. Please delete the trip instead.');
         }
-        const memberIndex = trip.members.findIndex(member => member.user.toString() === userId);
+        const memberIndex = trip.members.findIndex((member) => member.user.toString() === userId);
         if (memberIndex === -1) {
             throw new common_1.BadRequestException('You are not a member of this trip');
         }
@@ -213,12 +215,12 @@ let TripsService = class TripsService {
         if (trip.createdBy.toString() !== userId) {
             throw new common_1.ForbiddenException('Only trip creator can update member status');
         }
-        const member = trip.members.find(member => member.user.toString() === memberId);
+        const member = trip.members.find((member) => member.user.toString() === memberId);
         if (!member) {
             throw new common_1.NotFoundException('Member not found in this trip');
         }
         if (updateMemberStatusDto.status === constants_1.MemberStatus.JOINED) {
-            const joinedMembers = trip.members.filter(m => m.status === constants_1.MemberStatus.JOINED);
+            const joinedMembers = trip.members.filter((m) => m.status === constants_1.MemberStatus.JOINED);
             if (joinedMembers.length >= trip.maxParticipants && member.status !== constants_1.MemberStatus.JOINED) {
                 throw new common_1.BadRequestException('Trip is full');
             }
@@ -249,7 +251,7 @@ let TripsService = class TripsService {
         if (trip.createdBy.toString() === memberId) {
             throw new common_1.BadRequestException('Cannot remove trip creator');
         }
-        const memberIndex = trip.members.findIndex(member => member.user.toString() === memberId);
+        const memberIndex = trip.members.findIndex((member) => member.user.toString() === memberId);
         if (memberIndex === -1) {
             throw new common_1.NotFoundException('Member not found in this trip');
         }
@@ -272,14 +274,18 @@ let TripsService = class TripsService {
         if (!trip) {
             throw new common_1.NotFoundException('Trip not found');
         }
-        const excludedIds = trip.members.map(m => m.user.toString()).concat(trip.createdBy.toString(), userId);
+        const excludedIds = trip.members
+            .map((m) => m.user.toString())
+            .concat(trip.createdBy.toString(), userId);
         const candidates = await this.userModel.find({ _id: { $nin: excludedIds } }).exec();
-        const profiles = candidates.map(u => `ID: ${u._id}, Name: ${u.fullName}, Tags: ${(u.tags || []).join(', ')}, Bio: ${u.bio}`).join('\n');
+        const profiles = candidates
+            .map((u) => `ID: ${u._id}, Name: ${u.fullName}, Tags: ${(u.tags || []).join(', ')}, Bio: ${u.bio}`)
+            .join('\n');
         const prompt = `Recommend up to 5 user IDs best matching keyword "${dto.keyword}" from the users list:\n${profiles}`;
         try {
             const completion = await this.openai.chat.completions.create({
                 messages: [{ role: 'user', content: prompt }],
-                model: "",
+                model: '',
                 max_tokens: 128
             });
             let recommendedIds = [];
@@ -291,9 +297,12 @@ let TripsService = class TripsService {
             }
             catch (_c) {
                 const keywordLower = dto.keyword.toLowerCase();
-                recommendedIds = candidates.filter(u => Array.isArray(u.tags) && u.tags.some(tag => tag.toLowerCase().includes(keywordLower))).map(u => u._id.toString());
+                recommendedIds = candidates
+                    .filter((u) => Array.isArray(u.tags) &&
+                    u.tags.some((tag) => tag.toLowerCase().includes(keywordLower)))
+                    .map((u) => u._id.toString());
             }
-            let recommended = candidates.filter(u => recommendedIds.includes(u._id.toString()));
+            let recommended = candidates.filter((u) => recommendedIds.includes(u._id.toString()));
             if (recommended.length === 0) {
                 recommended = candidates.slice(0, 5);
             }
@@ -302,7 +311,10 @@ let TripsService = class TripsService {
         catch (error) {
             console.error('Azure OpenAI API error:', error);
             const keywordLower = dto.keyword.toLowerCase();
-            const recommended = candidates.filter(u => Array.isArray(u.tags) && u.tags.some(tag => tag.toLowerCase().includes(keywordLower))).slice(0, 5);
+            const recommended = candidates
+                .filter((u) => Array.isArray(u.tags) &&
+                u.tags.some((tag) => tag.toLowerCase().includes(keywordLower)))
+                .slice(0, 5);
             if (recommended.length === 0) {
                 return candidates.slice(0, 5);
             }

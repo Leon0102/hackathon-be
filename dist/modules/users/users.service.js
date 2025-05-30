@@ -17,14 +17,14 @@ const common_1 = require("@nestjs/common");
 const exceptions_1 = require("@nestjs/common/exceptions");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
-const client_s3_1 = require("@aws-sdk/client-s3");
 const dto_1 = require("../../common/dto");
 const constants_1 = require("../../constants");
-const schema_1 = require("./schema");
+const aws_s3_service_1 = require("../../shared/services/aws-s3.service");
+const users_schema_1 = require("./schema/users.schema");
 let UsersService = class UsersService {
-    constructor(usersModel) {
+    constructor(usersModel, awsS3Service) {
         this.usersModel = usersModel;
-        this.s3Client = new client_s3_1.S3Client({ region: process.env.AWS_REGION });
+        this.awsS3Service = awsS3Service;
     }
     async createUser(createUserDto) {
         const user = await this.usersModel.findOne({ email: createUserDto.email });
@@ -86,28 +86,40 @@ let UsersService = class UsersService {
         return user;
     }
     async updateUser(userId, updateUserDto) {
-        const user = await this.usersModel.findByIdAndUpdate(userId, updateUserDto, { new: true, runValidators: true }).select('-passwordHash').exec();
+        const user = await this.usersModel
+            .findByIdAndUpdate(userId, updateUserDto, { new: true, runValidators: true })
+            .select('-passwordHash')
+            .exec();
         if (!user) {
             throw new exceptions_1.NotFoundException(constants_1.ErrorCode.USER_NOT_FOUND);
         }
         return user;
     }
     async updateUserByEmail(email, updateUserDto) {
-        const user = await this.usersModel.findOneAndUpdate({ email }, updateUserDto, { new: true, runValidators: true }).select('-passwordHash').exec();
+        const user = await this.usersModel
+            .findOneAndUpdate({ email }, updateUserDto, { new: true, runValidators: true })
+            .select('-passwordHash')
+            .exec();
         if (!user) {
             throw new exceptions_1.NotFoundException(constants_1.ErrorCode.USER_NOT_FOUND);
         }
         return user;
     }
     async updateTrustScore(userId, newScore) {
-        const user = await this.usersModel.findByIdAndUpdate(userId, { trustScore: newScore }, { new: true }).select('-passwordHash').exec();
+        const user = await this.usersModel
+            .findByIdAndUpdate(userId, { trustScore: newScore }, { new: true })
+            .select('-passwordHash')
+            .exec();
         if (!user) {
             throw new exceptions_1.NotFoundException(constants_1.ErrorCode.USER_NOT_FOUND);
         }
         return user;
     }
     async verifyUser(userId) {
-        const user = await this.usersModel.findByIdAndUpdate(userId, { isVerified: true }, { new: true }).select('-passwordHash').exec();
+        const user = await this.usersModel
+            .findByIdAndUpdate(userId, { isVerified: true }, { new: true })
+            .select('-passwordHash')
+            .exec();
         if (!user) {
             throw new exceptions_1.NotFoundException(constants_1.ErrorCode.USER_NOT_FOUND);
         }
@@ -124,17 +136,15 @@ let UsersService = class UsersService {
         if (!file) {
             throw new common_1.BadRequestException('No file provided');
         }
-        const bucket = process.env.AWS_S3_BUCKET;
-        const ext = file.originalname.split('.').pop();
-        const key = `avatars/${userId}-${Date.now()}.${ext}`;
-        await this.s3Client.send(new client_s3_1.PutObjectCommand({
-            Bucket: bucket,
-            Key: key,
-            Body: file.buffer,
-            ContentType: file.mimetype,
-            ACL: 'public-read'
-        }));
-        const url = `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+        const fileData = {
+            encoding: file.encoding,
+            buffer: file.buffer,
+            fieldname: file.fieldname,
+            mimetype: file.mimetype,
+            originalname: file.originalname,
+            size: file.size
+        };
+        const url = await this.awsS3Service.uploadImage(fileData);
         const updated = await this.usersModel
             .findByIdAndUpdate(userId, { profilePictureUrl: url }, { new: true })
             .select('-passwordHash')
@@ -147,8 +157,9 @@ let UsersService = class UsersService {
 };
 UsersService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)(schema_1.Users.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __param(0, (0, mongoose_1.InjectModel)(users_schema_1.Users.name)),
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        aws_s3_service_1.AwsS3Service])
 ], UsersService);
 exports.UsersService = UsersService;
 //# sourceMappingURL=users.service.js.map
