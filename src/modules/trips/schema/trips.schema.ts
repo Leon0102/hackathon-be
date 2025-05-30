@@ -1,4 +1,19 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } fr    @Prop({ type: Number, required: true, min: 1 })
+    maxParticipants: number;
+
+    @Prop({
+        type: [{
+            user: { type: Types.ObjectId, ref: 'Users', required: true },
+            status: { type: String, enum: Object.values(MemberStatus), required: true },
+            joinedAt: { type: Date },
+            message: { type: String }
+        }],
+        default: []
+    })
+    members: TripMember[];
+
+    @Prop({ type: [{ type: Types.ObjectId, ref: 'Itinerary' }], default: [] })
+    itinerary: Types.ObjectId[];tjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { MemberStatus, TripStatus } from '../../../constants';
 
@@ -43,7 +58,7 @@ export class Trips extends Document {
     maxParticipants: number;
 
     @Prop({ type: [TripMemberSchema], default: [] })
-    members: TripMember[];
+    members: Types.Array<TripMember>;
 
     @Prop({ type: [{ type: Types.ObjectId, ref: 'Itinerary' }], default: [] })
     itinerary: Types.ObjectId[];
