@@ -31,7 +31,8 @@ export class UsersService {
         return this.usersModel.findOne(query);
     }
 
-    async getUserByEmail(email: string): Promise<Users | null> {
+    // Returns plain user object without Mongoose methods
+    async getUserByEmail(email: string): Promise<any | null> {
         return this.usersModel.findOne({ email }).select('-passwordHash').lean().exec();
     }
 
@@ -85,11 +86,13 @@ export class UsersService {
         throw new BadRequestException(ErrorCode.PASSWORD_NOT_UPDATED);
     }
 
-    async getAllUsers(): Promise<Users[]> {
+    // Returns list of plain user objects
+    async getAllUsers(): Promise<any[]> {
         return this.usersModel.find().select('-passwordHash').lean().exec();
     }
 
-    async getUserById(userId: string): Promise<Users> {
+    // Returns plain user object by ID
+    async getUserById(userId: string): Promise<any> {
         const user = await this.usersModel.findById(userId).select('-passwordHash').lean().exec();
 
         if (!user) {
