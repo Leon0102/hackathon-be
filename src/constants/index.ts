@@ -1,4 +1,5 @@
 export * from './admin-role.enum';
+export * from './age-range.enum';
 export * from './auth-provider.enum';
 export * from './email-template.enum';
 export * from './error-code.enum';
@@ -12,6 +13,8 @@ export * from './register-method.enum';
 export * from './success-code.enum';
 export * from './time-expression.enum';
 export * from './token.enum';
+export * from './travel-interest.enum';
+export * from './travel-purpose.enum';
 export * from './travel-style.enum';
 export * from './trip-status.enum';
 export * from './user-role.enum';

@@ -1,7 +1,7 @@
-import { IsDate, IsEnum, IsNumber, IsString, IsOptional, Min } from 'class-validator';
+import { IsDate, IsEnum, IsNumber, IsString, IsOptional, IsArray, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { StringField, NumberField } from '../../../../decorators';
-import { TripStatus } from '../../../../constants';
+import { TripStatus, AgeRange, TravelPurpose, TravelInterest } from '../../../../constants';
 
 export class UpdateTripDto {
     @StringField({ required: false })
@@ -26,4 +26,18 @@ export class UpdateTripDto {
     @IsEnum(TripStatus)
     @IsOptional()
     status?: TripStatus;
+
+    @IsEnum(AgeRange)
+    @IsOptional()
+    preferredAgeRange?: AgeRange;
+
+    @IsArray()
+    @IsEnum(TravelPurpose, { each: true })
+    @IsOptional()
+    travelPurposes?: TravelPurpose[];
+
+    @IsArray()
+    @IsEnum(TravelInterest, { each: true })
+    @IsOptional()
+    interests?: TravelInterest[];
 }

@@ -6,7 +6,7 @@ import { AzureOpenAI } from 'openai';
 import { MemberStatus, TripStatus } from '../../constants';
 import type { Users } from '../users/schema/users.schema';
 import type { GroupDocument } from '../groups/schema/group.schema';
-import type { CreateTripDto, JoinTripDto, UpdateMemberStatusDto, UpdateTripDto } from './dto/request';
+import type { CreateTripDto, JoinTripDto, UpdateMemberStatusDto, UpdateTripDto, SearchTripsDto } from './dto/request';
 import type { RecommendMembersDto } from './dto/request/recommend-members.dto';
 import type { RecommendationLog } from './schema/recommendation-log.schema';
 import type { TripsDocument } from './schema/trips.schema';

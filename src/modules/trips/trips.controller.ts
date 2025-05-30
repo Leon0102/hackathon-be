@@ -24,6 +24,7 @@ import {
     CreateTripDto,
     JoinTripDto,
     RecommendMembersDto,
+    SearchTripsDto,
     UpdateMemberStatusDto,
     UpdateTripDto
 } from './dto/request';

@@ -1,6 +1,6 @@
 import { Expose, Transform, Type } from 'class-transformer';
 
-import { MemberStatus } from '../../../../constants';
+import { MemberStatus, AgeRange, TravelInterest, TravelPurpose } from '../../../../constants';
 
 export class TripMemberUserDto {
     @Expose()
@@ -85,4 +85,13 @@ export class TripResponseDto {
 
     @Expose()
     isFull?: boolean;
+
+    @Expose()
+    preferredAgeRange?: AgeRange;
+
+    @Expose()
+    travelPurposes?: TravelPurpose[];
+
+    @Expose()
+    interests?: TravelInterest[];
 }
