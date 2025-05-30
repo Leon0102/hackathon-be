@@ -1,9 +1,21 @@
 import { Expose, Type } from 'class-transformer';
 import { MemberStatus } from '../../../../constants';
 
+
+export class TripMemberUserDto {
+    @Expose()
+    fullName: string;
+
+    @Expose()
+    email: string;
+
+    @Expose()
+    profilePictureUrl: string;
+}
 export class TripMemberResponseDto {
     @Expose()
-    user: string;
+    @Type(() => TripMemberUserDto) // ✅ expects populated object
+    user: TripMemberUserDto;
 
     @Expose()
     status: MemberStatus;
@@ -20,7 +32,8 @@ export class TripResponseDto {
     _id: string;
 
     @Expose()
-    createdBy: string;
+    @Type(() => TripMemberUserDto) // ✅ expects populated object
+    createdBy: TripMemberUserDto;
 
     @Expose()
     destination: string;

@@ -47,7 +47,7 @@ export class TripsService {
         return populatedTrip;
     }
 
-    async getAllTrips(page: number = 1, limit: number = 10): Promise<TripsDocument[]> {
+    async getAllTrips(page: number = 1, limit: number = 10): Promise<any[]> {
         const skip = (page - 1) * limit;
 
         const trips = await this.tripsModel
@@ -57,6 +57,7 @@ export class TripsService {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
+            .lean()
             .exec();
 
         return trips;

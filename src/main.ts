@@ -23,7 +23,6 @@ export async function bootstrap(): Promise<NestExpressApplication> {
         { cors: true }
     );
 
-    app.enable('trust proxy');
     app.use(helmet());
     app.setGlobalPrefix('/api', { exclude: [{ path: '/manifest/:startUrl', method: RequestMethod.GET }] });
     app.use(

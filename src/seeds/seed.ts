@@ -58,6 +58,7 @@ async function main() {
     const creator = faker.helpers.arrayElement(users);
     const startDate = faker.date.soon(30);
     const endDate = faker.date.between(startDate, new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000));
+    // Seed the trip, including the creator as an initial member
     const trip = await TripModel.create({
       createdBy: creator._id,
       destination: faker.address.city(),
@@ -65,7 +66,9 @@ async function main() {
       endDate,
       status: faker.helpers.arrayElement(Object.values(TripStatus)),
       maxParticipants: faker.datatype.number({ min: 1, max: 10 }),
-      members: [],
+      members: [
+        { user: creator._id, status: MemberStatus.JOINED, joinedAt: startDate }
+      ],
       itinerary: [],
     });
     trips.push(trip);

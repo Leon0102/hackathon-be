@@ -52,7 +52,6 @@ export class AuthService {
 
     async validateUser(userLoginDto: UserLoginDto): Promise<Users> {
         const user = await this.usersService.getUserByEmail(userLoginDto.email);
-
         if (!user) {
             throw new NotFoundException(ErrorCode.AUTH_EMAIL_NOT_FOUND);
         }
