@@ -85,7 +85,7 @@ export class UsersController {
     @ApiOperation({ summary: 'Get current user profile' })
     async getCurrentUserProfile(@AuthUser() user: Users) {
         const profile = await this.usersService.getUserByEmail(user.email);
-        return profile ? plainToInstance(UserResponseDto, profile.toObject(), { excludeExtraneousValues: true }) : null;
+        return profile ? plainToInstance(UserResponseDto, profile, { excludeExtraneousValues: true }) : null;
     }
 
     @Put('profile')

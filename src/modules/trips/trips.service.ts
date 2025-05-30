@@ -19,7 +19,14 @@ export class TripsService {
         @InjectModel(RecommendationLog.name) private readonly recLogModel: Model<RecommendationLog>,
         @InjectModel(Users.name) private readonly userModel: Model<Users>
     ) {
-        this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        this.openai = new OpenAI({
+            apiKey: process.env.AZURE_OPENAI_KEY,
+            baseURL: 'https://leon.openai.azure.com/openai/deployments/' + process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+            defaultQuery: { 'api-version': '2024-02-01' },
+            defaultHeaders: {
+                'api-key': process.env.AZURE_OPENAI_KEY,
+            },
+        });
     }
 
     async createTrip(createTripDto: CreateTripDto, creatorId: string): Promise<TripsDocument> {
@@ -344,7 +351,7 @@ export class TripsService {
         const profiles = candidates.map(u => `ID: ${u._id}, Name: ${u.fullName}, Tags: ${(u.tags||[]).join(', ')}, Bio: ${u.bio}`).join('\n');
         const prompt = `Recommend up to 5 user IDs best matching keyword "${dto.keyword}" from the users list:\n${profiles}`;
         const completion = await this.openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+            model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME!,
             messages: [{ role: 'user', content: prompt }]
         });
         let recommendedIds: string[] = [];
