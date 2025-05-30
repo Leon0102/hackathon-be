@@ -18,19 +18,40 @@ class MatchResponseDto {
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Match ID' }),
     (0, class_transformer_1.Expose)(),
-    (0, class_transformer_1.Transform)(({ obj }) => { var _a; return (_a = obj._id) === null || _a === void 0 ? void 0 : _a.toString(); }),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj._id) {
+            return obj._id.toString();
+        }
+        if (obj.id) {
+            return obj.id.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
 ], MatchResponseDto.prototype, "id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'User A ID' }),
     (0, class_transformer_1.Expose)(),
-    (0, class_transformer_1.Transform)(({ obj }) => { var _a; return (_a = obj.userA) === null || _a === void 0 ? void 0 : _a.toString(); }),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj.userA) {
+            return obj.userA.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
 ], MatchResponseDto.prototype, "userA", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'User B ID' }),
     (0, class_transformer_1.Expose)(),
-    (0, class_transformer_1.Transform)(({ obj }) => { var _a; return (_a = obj.userB) === null || _a === void 0 ? void 0 : _a.toString(); }),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj.userB) {
+            return obj.userB.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
 ], MatchResponseDto.prototype, "userB", void 0);
 __decorate([
@@ -46,7 +67,13 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'User who initiated the match' }),
     (0, class_transformer_1.Expose)(),
-    (0, class_transformer_1.Transform)(({ obj }) => { var _a; return (_a = obj.initiatedBy) === null || _a === void 0 ? void 0 : _a.toString(); }),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj.initiatedBy) {
+            return obj.initiatedBy.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
 ], MatchResponseDto.prototype, "initiatedBy", void 0);
 __decorate([

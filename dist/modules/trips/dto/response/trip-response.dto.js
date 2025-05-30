@@ -51,8 +51,18 @@ class TripResponseDto {
 }
 __decorate([
     (0, class_transformer_1.Expose)(),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj._id) {
+            return obj._id.toString();
+        }
+        if (obj.id) {
+            return obj.id.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
-], TripResponseDto.prototype, "_id", void 0);
+], TripResponseDto.prototype, "id", void 0);
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_transformer_1.Type)(() => TripMemberUserDto),

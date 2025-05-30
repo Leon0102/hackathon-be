@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
-import { Types } from 'mongoose';
 
 class ActivityResponseDto {
     @ApiProperty({ description: 'Time of the activity' })
@@ -19,12 +18,33 @@ class ActivityResponseDto {
 export class ItineraryResponseDto {
     @ApiProperty({ description: 'Itinerary ID' })
     @Expose()
-    @Transform(({ obj }) => obj._id?.toString())
+    @Transform(({ obj, key }) => {
+        // Handle MongoDB _id field
+        if (obj._id) {
+            return obj._id.toString();
+        }
+
+        // Handle regular id field
+        if (obj.id) {
+            return obj.id.toString();
+        }
+
+        // Fallback for other id formats
+        return obj[key]?.toString();
+    })
     id: string;
 
     @ApiProperty({ description: 'Trip ID this itinerary belongs to' })
     @Expose()
-    @Transform(({ obj }) => obj.tripId?.toString())
+    @Transform(({ obj, key }) => {
+        // Handle MongoDB ObjectId field
+        if (obj.tripId) {
+            return obj.tripId.toString();
+        }
+
+        // Fallback for other formats
+        return obj[key]?.toString();
+    })
     tripId: string;
 
     @ApiProperty({ description: 'Day number of the itinerary' })

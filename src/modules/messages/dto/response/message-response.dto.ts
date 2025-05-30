@@ -1,21 +1,51 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
+
 import { MessageType } from '../../../../constants';
 
 export class MessageResponseDto {
     @ApiProperty({ description: 'Message ID' })
     @Expose()
-    @Transform(({ obj }) => obj._id?.toString())
+    @Transform(({ obj, key }) => {
+        // Handle MongoDB _id field
+        if (obj._id) {
+            return obj._id.toString();
+        }
+
+        // Handle regular id field
+        if (obj.id) {
+            return obj.id.toString();
+        }
+
+        // Fallback for other id formats
+        return obj[key]?.toString();
+    })
     id: string;
 
     @ApiProperty({ description: 'Trip ID this message belongs to' })
     @Expose()
-    @Transform(({ obj }) => obj.tripId?.toString())
+    @Transform(({ obj, key }) => {
+        // Handle MongoDB ObjectId field
+        if (obj.tripId) {
+            return obj.tripId.toString();
+        }
+
+        // Fallback for other formats
+        return obj[key]?.toString();
+    })
     tripId: string;
 
     @ApiProperty({ description: 'Sender ID' })
     @Expose()
-    @Transform(({ obj }) => obj.senderId?.toString())
+    @Transform(({ obj, key }) => {
+        // Handle MongoDB ObjectId field
+        if (obj.senderId) {
+            return obj.senderId.toString();
+        }
+
+        // Fallback for other formats
+        return obj[key]?.toString();
+    })
     senderId: string;
 
     @ApiProperty({ description: 'Content of the message' })

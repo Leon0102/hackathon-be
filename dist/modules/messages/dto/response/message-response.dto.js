@@ -18,19 +18,40 @@ class MessageResponseDto {
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Message ID' }),
     (0, class_transformer_1.Expose)(),
-    (0, class_transformer_1.Transform)(({ obj }) => { var _a; return (_a = obj._id) === null || _a === void 0 ? void 0 : _a.toString(); }),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj._id) {
+            return obj._id.toString();
+        }
+        if (obj.id) {
+            return obj.id.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
 ], MessageResponseDto.prototype, "id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Trip ID this message belongs to' }),
     (0, class_transformer_1.Expose)(),
-    (0, class_transformer_1.Transform)(({ obj }) => { var _a; return (_a = obj.tripId) === null || _a === void 0 ? void 0 : _a.toString(); }),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj.tripId) {
+            return obj.tripId.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
 ], MessageResponseDto.prototype, "tripId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Sender ID' }),
     (0, class_transformer_1.Expose)(),
-    (0, class_transformer_1.Transform)(({ obj }) => { var _a; return (_a = obj.senderId) === null || _a === void 0 ? void 0 : _a.toString(); }),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj.senderId) {
+            return obj.senderId.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
 ], MessageResponseDto.prototype, "senderId", void 0);
 __decorate([

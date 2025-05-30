@@ -33,6 +33,8 @@ let AuthService = class AuthService {
                 userEmail: data.userEmail,
                 type: constants_1.Token.ACCESS_TOKEN,
                 role: data.role
+            }, {
+                expiresIn: this.configService.authConfig.jwtExpirationTime
             }),
             refreshToken: await this.jwtService.signAsync({
                 userEmail: data.userEmail,

@@ -34,13 +34,28 @@ class ItineraryResponseDto {
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Itinerary ID' }),
     (0, class_transformer_1.Expose)(),
-    (0, class_transformer_1.Transform)(({ obj }) => { var _a; return (_a = obj._id) === null || _a === void 0 ? void 0 : _a.toString(); }),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj._id) {
+            return obj._id.toString();
+        }
+        if (obj.id) {
+            return obj.id.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
 ], ItineraryResponseDto.prototype, "id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Trip ID this itinerary belongs to' }),
     (0, class_transformer_1.Expose)(),
-    (0, class_transformer_1.Transform)(({ obj }) => { var _a; return (_a = obj.tripId) === null || _a === void 0 ? void 0 : _a.toString(); }),
+    (0, class_transformer_1.Transform)(({ obj, key }) => {
+        var _a;
+        if (obj.tripId) {
+            return obj.tripId.toString();
+        }
+        return (_a = obj[key]) === null || _a === void 0 ? void 0 : _a.toString();
+    }),
     __metadata("design:type", String)
 ], ItineraryResponseDto.prototype, "tripId", void 0);
 __decorate([

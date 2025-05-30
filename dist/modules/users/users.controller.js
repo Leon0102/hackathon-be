@@ -15,11 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const swagger_1 = require("@nestjs/swagger");
-const mongoose_2 = require("mongoose");
 const platform_express_1 = require("@nestjs/platform-express");
-const multer_1 = require("multer");
+const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
+const mongoose_2 = require("mongoose");
+const multer_1 = require("multer");
 const dto_1 = require("../../common/dto");
 const constants_1 = require("../../constants");
 const decorators_1 = require("../../decorators");
@@ -33,15 +33,15 @@ let UsersController = class UsersController {
         this.usersService = usersService;
     }
     async getUser(id) {
-        const user = await this.usersService.findByIdOrEmail({ id });
-        return (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, user.toObject(), { excludeExtraneousValues: true });
+        const user = await this.usersService.getUserById(id);
+        return (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, user, { excludeExtraneousValues: true });
     }
     changePassword(changePasswordDto, user) {
         return this.usersService.changePassword(user.email, changePasswordDto);
     }
     async getAllUsers() {
         const users = await this.usersService.getAllUsers();
-        return users.map(u => (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, u.toObject(), { excludeExtraneousValues: true }));
+        return users.map((u) => (0, class_transformer_1.plainToInstance)(user_response_dto_1.UserResponseDto, u, { excludeExtraneousValues: true }));
     }
     async getCurrentUserProfile(user) {
         const profile = await this.usersService.getUserByEmail(user.email);

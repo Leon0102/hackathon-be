@@ -1,6 +1,6 @@
-import { Expose, Type } from 'class-transformer';
-import { MemberStatus } from '../../../../constants';
+import { Expose, Transform, Type } from 'class-transformer';
 
+import { MemberStatus } from '../../../../constants';
 
 export class TripMemberUserDto {
     @Expose()
@@ -29,7 +29,21 @@ export class TripMemberResponseDto {
 
 export class TripResponseDto {
     @Expose()
-    _id: string;
+    @Transform(({ obj, key }) => {
+        // Handle MongoDB _id field
+        if (obj._id) {
+            return obj._id.toString();
+        }
+
+        // Handle regular id field
+        if (obj.id) {
+            return obj.id.toString();
+        }
+
+        // Fallback for other id formats
+        return obj[key]?.toString();
+    })
+    id: string;
 
     @Expose()
     @Type(() => TripMemberUserDto) // ✅ expects populated object

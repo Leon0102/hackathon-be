@@ -1,9 +1,24 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+
 import { AuthProvider, Gender, TravelStyle, UserRole } from '../../../../constants';
 
 export class UserResponseDto {
     @Expose()
-    _id: string;
+    @Transform(({ obj, key }) => {
+        // Handle MongoDB _id field
+        if (obj._id) {
+            return obj._id.toString();
+        }
+
+        // Handle regular id field
+        if (obj.id) {
+            return obj.id.toString();
+        }
+
+        // Fallback for other id formats
+        return obj[key]?.toString();
+    })
+    id: string;
 
     @Expose()
     fullName: string;
