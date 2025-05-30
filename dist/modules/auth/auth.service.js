@@ -48,7 +48,7 @@ let AuthService = class AuthService {
         if (!user) {
             throw new common_1.NotFoundException(constants_1.ErrorCode.AUTH_EMAIL_NOT_FOUND);
         }
-        const isPasswordValid = await (0, utils_1.validateHash)(userLoginDto.password, user === null || user === void 0 ? void 0 : user.password);
+        const isPasswordValid = await (0, utils_1.validateHash)(userLoginDto.password, user === null || user === void 0 ? void 0 : user.passwordHash);
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException(constants_1.ErrorCode.AUTH_INCORRECT_PASSWORD);
         }

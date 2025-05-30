@@ -27,15 +27,14 @@ let TripsController = class TripsController {
         this.tripsService = tripsService;
     }
     async createTrip(createTripDto, user) {
-        var _a;
-        return this.tripsService.createTrip(createTripDto, user.id || ((_a = user._id) === null || _a === void 0 ? void 0 : _a.toString()));
+        var _a, _b;
+        return this.tripsService.createTrip(createTripDto, (_a = user.id) !== null && _a !== void 0 ? _a : (_b = user._id) === null || _b === void 0 ? void 0 : _b.toString());
     }
     async getAllTrips(page = 1, limit = 10) {
         return this.tripsService.getAllTrips(page, limit);
     }
     async getMyTrips(user) {
-        var _a;
-        return this.tripsService.getMyTrips(user.id || ((_a = user._id) === null || _a === void 0 ? void 0 : _a.toString()));
+        return this.tripsService.getMyTrips(user._id.toString());
     }
     async searchTrips(destination, startDate, endDate) {
         return this.tripsService.searchTrips(destination, startDate, endDate);

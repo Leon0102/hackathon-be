@@ -13,7 +13,13 @@ const config_1 = require("@nestjs/config");
 const mongoose_1 = require("@nestjs/mongoose");
 const schedule_1 = require("@nestjs/schedule");
 const mailer_1 = require("@nestjs-modules/mailer");
+const admins_module_1 = require("./modules/admins/admins.module");
 const auth_module_1 = require("./modules/auth/auth.module");
+const itinerary_module_1 = require("./modules/itinerary/itinerary.module");
+const matches_module_1 = require("./modules/matches/matches.module");
+const messages_module_1 = require("./modules/messages/messages.module");
+const reports_module_1 = require("./modules/reports/reports.module");
+const reviews_module_1 = require("./modules/reviews/reviews.module");
 const trips_module_1 = require("./modules/trips/trips.module");
 const users_module_1 = require("./modules/users/users.module");
 const api_config_service_1 = require("./shared/services/api-config.service");
@@ -50,6 +56,12 @@ AppModule = __decorate([
             users_module_1.UsersModule,
             auth_module_1.AuthModule,
             trips_module_1.TripsModule,
+            itinerary_module_1.ItineraryModule,
+            messages_module_1.MessagesModule,
+            matches_module_1.MatchesModule,
+            reviews_module_1.ReviewsModule,
+            reports_module_1.ReportsModule,
+            admins_module_1.AdminsModule,
             schedule_1.ScheduleModule.forRoot()
         ],
         providers: []

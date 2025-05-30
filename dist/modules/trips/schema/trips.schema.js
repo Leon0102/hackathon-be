@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TripMemberSchema = exports.TripsSchema = exports.Trips = exports.TripMember = void 0;
+exports.TripsSchema = exports.Trips = exports.TripMemberSchema = exports.TripMember = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const constants_1 = require("../../../constants");
@@ -20,7 +20,7 @@ __decorate([
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], TripMember.prototype, "user", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: String, enum: constants_1.MemberStatus, required: true }),
+    (0, mongoose_1.Prop)({ type: String, enum: Object.values(constants_1.MemberStatus), required: true }),
     __metadata("design:type", String)
 ], TripMember.prototype, "status", void 0);
 __decorate([
@@ -35,6 +35,7 @@ TripMember = __decorate([
     (0, mongoose_1.Schema)({ _id: false })
 ], TripMember);
 exports.TripMember = TripMember;
+exports.TripMemberSchema = mongoose_1.SchemaFactory.createForClass(TripMember);
 let Trips = class Trips extends mongoose_2.Document {
 };
 __decorate([
@@ -54,7 +55,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Trips.prototype, "endDate", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: String, enum: constants_1.TripStatus, default: constants_1.TripStatus.OPEN, required: true }),
+    (0, mongoose_1.Prop)({ type: String, enum: Object.values(constants_1.TripStatus), default: constants_1.TripStatus.OPEN, required: true }),
     __metadata("design:type", String)
 ], Trips.prototype, "status", void 0);
 __decorate([
@@ -62,7 +63,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Trips.prototype, "maxParticipants", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: [TripMember], default: [] }),
+    (0, mongoose_1.Prop)({ type: [exports.TripMemberSchema], default: [] }),
     __metadata("design:type", Array)
 ], Trips.prototype, "members", void 0);
 __decorate([
@@ -74,7 +75,6 @@ Trips = __decorate([
 ], Trips);
 exports.Trips = Trips;
 exports.TripsSchema = mongoose_1.SchemaFactory.createForClass(Trips);
-exports.TripMemberSchema = mongoose_1.SchemaFactory.createForClass(TripMember);
 exports.TripsSchema.index({ createdBy: 1 });
 exports.TripsSchema.index({ destination: 'text' });
 exports.TripsSchema.index({ startDate: 1, endDate: 1 });
