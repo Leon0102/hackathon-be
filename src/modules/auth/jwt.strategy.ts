@@ -22,11 +22,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
         }
 
-        const user = await this.usersService.findOne({
-            // FIXME: issue with type casts
-            id: args.userId as never,
-            role: args.role
+        const user = await this.usersService.findByIdOrEmail({
+            id: args.userId
         });
+        // Ensure the user exists and is not null
 
         if (!user) {
             throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
