@@ -57,7 +57,7 @@ export class AuthService {
             throw new NotFoundException(ErrorCode.AUTH_EMAIL_NOT_FOUND);
         }
 
-        const isPasswordValid = await validateHash(userLoginDto.password, user?.password);
+        const isPasswordValid = await validateHash(userLoginDto.password, user?.passwordHash);
 
         if (!isPasswordValid) {
             throw new UnauthorizedException(ErrorCode.AUTH_INCORRECT_PASSWORD);

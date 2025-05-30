@@ -57,7 +57,7 @@ export class UsersService {
     }
 
     async updatePassword(email: string, password: string) {
-        return this.usersModel.updateOne({ email }, { password });
+        return this.usersModel.updateOne({ email }, { passwordHash: password });
     }
 
     async checkExistingEmail(email: string) {
@@ -70,8 +70,8 @@ export class UsersService {
         return new ResponseDto({ messageCode: SuccessCode.EMAIL_VALID });
     }
 
-    async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
-        const user = await this.findByIdOrEmail({ id: userId });
+    async changePassword(userEmail: string, changePasswordDto: ChangePasswordDto) {
+        const user = await this.findByIdOrEmail({ email: userEmail });
 
         if (changePasswordDto.newPassword === changePasswordDto.newPasswordConfirmed) {
             await this.updatePassword(user.email, changePasswordDto.newPassword);
@@ -80,5 +80,85 @@ export class UsersService {
         }
 
         throw new BadRequestException(ErrorCode.PASSWORD_NOT_UPDATED);
+    }
+
+    async getAllUsers(): Promise<Users[]> {
+        return this.usersModel.find().select('-passwordHash').exec();
+    }
+
+    async getUserById(userId: string): Promise<Users> {
+        const user = await this.usersModel.findById(userId).select('-passwordHash').exec();
+
+        if (!user) {
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return user;
+    }
+
+    async updateUser(userId: string, updateUserDto: any): Promise<Users> {
+        const user = await this.usersModel.findByIdAndUpdate(
+            userId,
+            updateUserDto,
+            { new: true, runValidators: true }
+        ).select('-passwordHash').exec();
+
+        if (!user) {
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return user;
+    }
+
+    async updateUserByEmail(email: string, updateUserDto: any): Promise<Users> {
+        const user = await this.usersModel.findOneAndUpdate(
+            { email },
+            updateUserDto,
+            { new: true, runValidators: true }
+        ).select('-passwordHash').exec();
+
+        if (!user) {
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return user;
+    }
+
+    async updateTrustScore(userId: string, newScore: number): Promise<Users> {
+        const user = await this.usersModel.findByIdAndUpdate(
+            userId,
+            { trustScore: newScore },
+            { new: true }
+        ).select('-passwordHash').exec();
+
+        if (!user) {
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return user;
+    }
+
+    async verifyUser(userId: string): Promise<Users> {
+        const user = await this.usersModel.findByIdAndUpdate(
+            userId,
+            { isVerified: true },
+            { new: true }
+        ).select('-passwordHash').exec();
+
+        if (!user) {
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return user;
+    }
+
+    async deleteUser(userId: string): Promise<ResponseDto> {
+        const result = await this.usersModel.findByIdAndDelete(userId).exec();
+
+        if (!result) {
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return new ResponseDto({ messageCode: SuccessCode.USER_DELETED || 'USER_DELETED' });
     }
 }
