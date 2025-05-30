@@ -43,7 +43,7 @@ async function main() {
       preferredDestinations: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }, () => faker.address.city()),
       trustScore: faker.datatype.number({ min: 0, max: 100 }),
       isVerified: faker.datatype.boolean(),
-      role: faker.helpers.arrayElement(Object.values(UserRole)),
+      role: UserRole.USER,
       tags: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }, () => faker.lorem.word()),
     });
     users.push(user);
