@@ -1,3 +1,4 @@
+declare const module: any;
 import { bootstrap } from './main';
 
 void bootstrap().then((app) => {
