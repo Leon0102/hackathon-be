@@ -29,9 +29,8 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         if (args.type !== constants_1.Token.ACCESS_TOKEN) {
             throw new common_1.UnauthorizedException(constants_1.ErrorCode.UNAUTHORIZED);
         }
-        const user = await this.usersService.findOne({
-            id: args.userId,
-            role: args.role
+        const user = await this.usersService.findByIdOrEmail({
+            email: args.userEmail
         });
         if (!user) {
             throw new common_1.UnauthorizedException(constants_1.ErrorCode.UNAUTHORIZED);
@@ -41,7 +40,8 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
 };
 JwtStrategy = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [api_config_service_1.ApiConfigService, users_service_1.UsersService])
+    __metadata("design:paramtypes", [api_config_service_1.ApiConfigService,
+        users_service_1.UsersService])
 ], JwtStrategy);
 exports.JwtStrategy = JwtStrategy;
 //# sourceMappingURL=jwt.strategy.js.map

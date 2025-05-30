@@ -2,7 +2,7 @@
 import type { TokenType } from '../../constants';
 
 interface ITokenPayload {
-    userId: string;
+    userEmail: string;
     email: string;
     role: string;
     type: TokenType;

@@ -10,20 +10,23 @@ import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor(private configService: ApiConfigService, private usersService: UsersService) {
+    constructor(
+        private readonly configService: ApiConfigService,
+        private readonly usersService: UsersService
+    ) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             secretOrKey: configService.authConfig.publicKey
         });
     }
 
-    async validate(args: { userId: string; role: UserRole; type: TokenType }): Promise<Users> {
+    async validate(args: { userEmail: string; role: UserRole; type: TokenType }): Promise<Users> {
         if (args.type !== Token.ACCESS_TOKEN) {
             throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
         }
 
         const user = await this.usersService.findByIdOrEmail({
-            id: args.userId
+            email: args.userEmail
         });
         // Ensure the user exists and is not null
 

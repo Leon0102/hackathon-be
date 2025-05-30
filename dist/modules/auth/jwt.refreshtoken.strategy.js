@@ -31,7 +31,7 @@ let JwtRefreshTokenStrategy = class JwtRefreshTokenStrategy extends (0, passport
         if (payload.type !== constants_1.Token.REFRESH_TOKEN) {
             throw new common_1.UnauthorizedException(constants_1.ErrorCode.UNAUTHORIZED);
         }
-        const user = await this.userService.findByIdOrEmail({ id: payload.userId });
+        const user = await this.userService.findByIdOrEmail({ email: payload.userEmail });
         if (!user) {
             throw new common_1.UnauthorizedException(constants_1.ErrorCode.UNAUTHORIZED);
         }
@@ -40,7 +40,8 @@ let JwtRefreshTokenStrategy = class JwtRefreshTokenStrategy extends (0, passport
 };
 JwtRefreshTokenStrategy = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [users_service_1.UsersService, api_config_service_1.ApiConfigService])
+    __metadata("design:paramtypes", [users_service_1.UsersService,
+        api_config_service_1.ApiConfigService])
 ], JwtRefreshTokenStrategy);
 exports.JwtRefreshTokenStrategy = JwtRefreshTokenStrategy;
 //# sourceMappingURL=jwt.refreshtoken.strategy.js.map

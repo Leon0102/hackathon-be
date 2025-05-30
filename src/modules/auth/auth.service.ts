@@ -28,17 +28,17 @@ export class AuthService {
         private readonly mailService: MailService
     ) {}
 
-    async createAccessToken(data: { role: UserRole; userId: string }): Promise<TokenPayloadDto> {
+    async createAccessToken(data: { role: UserRole; userEmail: string }): Promise<TokenPayloadDto> {
         return new TokenPayloadDto({
             expiresIn: this.configService.authConfig.jwtExpirationTime,
             accessToken: await this.jwtService.signAsync({
-                userId: data.userId,
+                userEmail: data.userEmail,
                 type: Token.ACCESS_TOKEN,
                 role: data.role
             }),
             refreshToken: await this.jwtService.signAsync(
                 {
-                    userId: data.userId,
+                    userEmail: data.userEmail,
                     type: Token.REFRESH_TOKEN,
                     role: data.role
                 },
@@ -52,6 +52,7 @@ export class AuthService {
 
     async validateUser(userLoginDto: UserLoginDto): Promise<Users> {
         const user = await this.usersService.getUserByEmail(userLoginDto.email);
+
         if (!user) {
             throw new NotFoundException(ErrorCode.AUTH_EMAIL_NOT_FOUND);
         }
@@ -139,7 +140,7 @@ export class AuthService {
     //         );
 
     //         const token = await this.createAccessToken({
-    //             userId: userDto.id,
+    //             userEmail: userDto.email,
     //             role: userDto.role
     //         });
 
@@ -149,7 +150,7 @@ export class AuthService {
     //     }
 
     //     const loginToken = await this.createAccessToken({
-    //         userId: user.id,
+    //         userEmail: user.email,
     //         role: user.role
     //     });
 

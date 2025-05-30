@@ -16,7 +16,10 @@ interface IRequest {
 
 @Injectable()
 export class JwtRefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refresh-token') {
-    constructor(private userService: UsersService, private configService: ApiConfigService) {
+    constructor(
+        private readonly userService: UsersService,
+        private readonly configService: ApiConfigService
+    ) {
         super({
             jwtFromRequest: ExtractJwt.fromHeader('refreshtoken'),
             ignoreExpiration: false,
@@ -30,7 +33,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-ref
             throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
         }
 
-        const user = await this.userService.findByIdOrEmail({ id: payload.userId });
+        const user = await this.userService.findByIdOrEmail({ email: payload.userEmail });
 
         if (!user) {
             throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);

@@ -22,7 +22,7 @@ import IRequestWithUser from './request-with-user.interface';
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
-    constructor(private usersService: UsersService, private authService: AuthService) {}
+    constructor(private readonly usersService: UsersService, private readonly authService: AuthService) {}
 
     @Post('login')
     @HttpCode(HttpStatus.OK)
@@ -35,7 +35,7 @@ export class AuthController {
         const userEntity = await this.authService.validateUser(userLoginDto);
 
         const token = await this.authService.createAccessToken({
-            userId: userEntity._id.toString(),
+            userEmail: userEntity.email,
             role: userEntity.role
         });
 
@@ -63,7 +63,7 @@ export class AuthController {
         const user = await this.authService.verifyOTP(dto);
 
         return this.authService.createAccessToken({
-            userId: user.id,
+            userEmail: user.email,
             role: user.role
         });
     }
@@ -140,7 +140,7 @@ export class AuthController {
     async refreshToken(@Req() req: IRequestWithUser) {
         if (req?.user) {
             return this.authService.createAccessToken({
-                userId: req.user.id,
+                userEmail: req.user.email,
                 role: req.user.role
             });
         }

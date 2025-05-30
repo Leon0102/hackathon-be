@@ -32,7 +32,7 @@ let AuthController = class AuthController {
     async userLogin(userLoginDto) {
         const userEntity = await this.authService.validateUser(userLoginDto);
         const token = await this.authService.createAccessToken({
-            userId: userEntity._id.toString(),
+            userEmail: userEntity.email,
             role: userEntity.role
         });
         return new dto_2.LoginPayloadDto(userEntity, token);
@@ -43,7 +43,7 @@ let AuthController = class AuthController {
     async verifyOtp(dto) {
         const user = await this.authService.verifyOTP(dto);
         return this.authService.createAccessToken({
-            userId: user.id,
+            userEmail: user.email,
             role: user.role
         });
     }
@@ -56,7 +56,7 @@ let AuthController = class AuthController {
     async refreshToken(req) {
         if (req === null || req === void 0 ? void 0 : req.user) {
             return this.authService.createAccessToken({
-                userId: req.user.id,
+                userEmail: req.user.email,
                 role: req.user.role
             });
         }

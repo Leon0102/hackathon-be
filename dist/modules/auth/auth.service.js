@@ -30,12 +30,12 @@ let AuthService = class AuthService {
         return new token_payload_dto_1.TokenPayloadDto({
             expiresIn: this.configService.authConfig.jwtExpirationTime,
             accessToken: await this.jwtService.signAsync({
-                userId: data.userId,
+                userEmail: data.userEmail,
                 type: constants_1.Token.ACCESS_TOKEN,
                 role: data.role
             }),
             refreshToken: await this.jwtService.signAsync({
-                userId: data.userId,
+                userEmail: data.userEmail,
                 type: constants_1.Token.REFRESH_TOKEN,
                 role: data.role
             }, {

@@ -27,7 +27,7 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)({
         type: String,
-        required: function () {
+        required() {
             return this.authProvider === constants_1.AuthProvider.LOCAL;
         }
     }),
@@ -95,11 +95,22 @@ exports.UsersSchema.index({ authProvider: 1 });
 exports.UsersSchema.index({ trustScore: -1 });
 exports.UsersSchema.index({ isVerified: 1 });
 exports.UsersSchema.virtual('profileCompletion').get(function () {
-    const fields = ['fullName', 'email', 'age', 'gender', 'bio', 'languages', 'travelStyle', 'preferredDestinations'];
-    const completedFields = fields.filter(field => {
+    const fields = [
+        'fullName',
+        'email',
+        'age',
+        'gender',
+        'bio',
+        'languages',
+        'travelStyle',
+        'preferredDestinations'
+    ];
+    const completedFields = fields.filter((field) => {
         const value = this[field];
-        return value !== null && value !== undefined && value !== '' &&
-            (Array.isArray(value) ? value.length > 0 : true);
+        return (value !== null &&
+            value !== undefined &&
+            value !== '' &&
+            (Array.isArray(value) ? value.length > 0 : true));
     });
     return Math.round((completedFields.length / fields.length) * 100);
 });
