@@ -14,6 +14,9 @@ export class Group extends Document {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Users' }], default: [] })
   members: Types.ObjectId[];
+
+  @Prop({ type: Number, required: true, min: 1 })
+  maxParticipants: number;
 }
 
 export type GroupDocument = Group & Document;

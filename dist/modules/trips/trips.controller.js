@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TripsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 const dto_1 = require("../../common/dto");
 const constants_1 = require("../../constants");
 const decorators_1 = require("../../decorators");
@@ -28,31 +29,52 @@ let TripsController = class TripsController {
     }
     async createTrip(createTripDto, user) {
         var _a, _b;
-        return this.tripsService.createTrip(createTripDto, (_a = user.id) !== null && _a !== void 0 ? _a : (_b = user._id) === null || _b === void 0 ? void 0 : _b.toString());
+        const result = await this.tripsService.createTrip(createTripDto, (_a = user.id) !== null && _a !== void 0 ? _a : (_b = user._id) === null || _b === void 0 ? void 0 : _b.toString());
+        return (0, class_transformer_1.plainToInstance)(response_1.TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
     async getAllTrips(page = 1, limit = 10) {
-        return this.tripsService.getAllTrips(page, limit);
+        const result = await this.tripsService.getAllTrips(page, limit);
+        return (0, class_transformer_1.plainToInstance)(response_1.TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
     async getMyTrips(user) {
-        return this.tripsService.getMyTrips(user._id.toString());
+        const result = await this.tripsService.getMyTrips(user._id.toString());
+        return (0, class_transformer_1.plainToInstance)(response_1.TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
     async searchTrips(destination, startDate, endDate) {
-        return this.tripsService.searchTrips(destination, startDate, endDate);
+        const result = await this.tripsService.searchTrips(destination, startDate, endDate);
+        return (0, class_transformer_1.plainToInstance)(response_1.TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
     async getTripById(id) {
         return this.tripsService.getTripById(id);
     }
     async updateTrip(id, updateTripDto, user) {
-        return this.tripsService.updateTrip(id, updateTripDto, user._id.toString());
+        const result = await this.tripsService.updateTrip(id, updateTripDto, user._id.toString());
+        return (0, class_transformer_1.plainToInstance)(response_1.TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
     async deleteTrip(id, user) {
         return this.tripsService.deleteTrip(id, user._id.toString());
     }
     async joinTrip(id, joinTripDto, user) {
-        return this.tripsService.joinTrip(id, user._id.toString(), joinTripDto);
+        const result = await this.tripsService.joinTrip(id, user._id.toString(), joinTripDto);
+        return (0, class_transformer_1.plainToInstance)(response_1.TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
     async leaveTrip(id, user) {
-        return this.tripsService.leaveTrip(id, user._id.toString());
+        const result = await this.tripsService.leaveTrip(id, user._id.toString());
+        return (0, class_transformer_1.plainToInstance)(response_1.TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
     }
     async updateMemberStatus(id, memberId, updateMemberStatusDto, user) {
         return this.tripsService.updateMemberStatus(id, memberId, updateMemberStatusDto, user._id.toString());
@@ -61,7 +83,10 @@ let TripsController = class TripsController {
         return this.tripsService.removeMember(id, memberId, user._id.toString());
     }
     async recommendMembers(id, recommendDto, user) {
-        return this.tripsService.recommendMembers(id, user._id.toString(), recommendDto);
+        const result = await this.tripsService.recommendMembers(id, user._id.toString(), recommendDto);
+        return (0, class_transformer_1.plainToInstance)(users_schema_1.Users, result, {
+            excludeExtraneousValues: true
+        });
     }
 };
 __decorate([
@@ -77,8 +102,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [request_1.CreateTripDto,
-        users_schema_1.Users]),
+    __metadata("design:paramtypes", [request_1.CreateTripDto, users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "createTrip", null);
 __decorate([
@@ -95,7 +119,7 @@ __decorate([
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "getAllTrips", null);
 __decorate([
@@ -161,8 +185,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __param(2, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, request_1.UpdateTripDto,
-        users_schema_1.Users]),
+    __metadata("design:paramtypes", [String, request_1.UpdateTripDto, users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "updateTrip", null);
 __decorate([
@@ -194,8 +217,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __param(2, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, request_1.JoinTripDto,
-        users_schema_1.Users]),
+    __metadata("design:paramtypes", [String, request_1.JoinTripDto, users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "joinTrip", null);
 __decorate([

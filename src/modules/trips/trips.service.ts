@@ -1,27 +1,25 @@
-import '@azure/openai/types';
-
-import { DefaultAzureCredential, getBearerTokenProvider } from '@azure/identity';
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AzureOpenAI } from 'openai';
 
 import { MemberStatus, TripStatus } from '../../constants';
-import { Users } from '../users/schema/users.schema';
+import type { Users } from '../users/schema/users.schema';
+import type { GroupDocument } from '../groups/schema/group.schema';
 import type { CreateTripDto, JoinTripDto, UpdateMemberStatusDto, UpdateTripDto } from './dto/request';
 import type { RecommendMembersDto } from './dto/request/recommend-members.dto';
-import { RecommendationLog } from './schema/recommendation-log.schema';
+import type { RecommendationLog } from './schema/recommendation-log.schema';
 import type { TripsDocument } from './schema/trips.schema';
-import { Trips } from './schema/trips.schema';
 
 @Injectable()
 export class TripsService {
-    private openai: AzureOpenAI;
+    private readonly openai: AzureOpenAI;
 
     constructor(
-        @InjectModel(Trips.name) private readonly tripsModel: Model<TripsDocument>,
-        @InjectModel(RecommendationLog.name) private readonly recLogModel: Model<RecommendationLog>,
-        @InjectModel(Users.name) private readonly userModel: Model<Users>
+        @InjectModel('Trips') private readonly tripsModel: Model<TripsDocument>,
+        @InjectModel('RecommendationLog') private readonly recLogModel: Model<RecommendationLog>,
+        @InjectModel('Users') private readonly userModel: Model<Users>,
+        @InjectModel('Group') private readonly groupModel: Model<GroupDocument>
     ) {
         // Initialize Azure OpenAI client with proper authentication
         const apiKey = process.env.AZURE_OPENAI_KEY;
@@ -199,45 +197,41 @@ export class TripsService {
             throw new BadRequestException('Trip is not open for joining');
         }
 
-        // Check if user is already a member
-        const existingMember = trip.members.find((member) => member.user.toString() === userId);
+        // Find all groups for this trip
+        const groups = await this.groupModel.find({ trip: id });
 
-        if (existingMember) {
-            throw new BadRequestException('You are already a member of this trip');
+        if (!groups.length) {
+            throw new NotFoundException('No groups available for this trip');
         }
 
-        // Check if trip is full
-        const joinedMembers = trip.members.filter((member) => member.status === MemberStatus.JOINED);
+        // Check if user is already in any group for this trip
+        const isAlreadyInGroup = groups.some((group) =>
+            group.members.some((member) => member.toString() === userId)
+        );
 
-        if (joinedMembers.length >= trip.maxParticipants) {
-            throw new BadRequestException('Trip is full');
+        if (isAlreadyInGroup) {
+            throw new BadRequestException('You are already a member of a group for this trip');
         }
 
-        // Add new member with requested status or joined status
-        const memberStatus =
-            trip.createdBy.toString() === userId ? MemberStatus.JOINED : MemberStatus.REQUESTED;
+        // Find a group that is not full
+        const availableGroup = groups.find(
+            (group) => group.members.length < group.maxParticipants
+        );
 
-        trip.members.push({
-            user: new Types.ObjectId(userId),
-            status: memberStatus,
-            joinedAt: new Date(),
-            message: joinTripDto.message
-        });
+        if (!availableGroup) {
+            throw new BadRequestException('All groups for this trip are full');
+        }
 
-        await trip.save();
+        // Add user to the available group
+        availableGroup.members.push(new Types.ObjectId(userId));
+        await availableGroup.save();
 
-        const updatedTrip = await this.tripsModel
+        // Return the updated trip with populated groups if needed
+        return this.tripsModel
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
-            .populate('members.user', 'fullName email profilePictureUrl')
             .lean()
             .exec();
-
-        if (!updatedTrip) {
-            throw new NotFoundException('Trip not found after join');
-        }
-
-        return updatedTrip;
     }
 
     async leaveTrip(id: string, userId: string): Promise<TripsDocument> {
@@ -291,9 +285,9 @@ export class TripsService {
             throw new ForbiddenException('Only trip creator can update member status');
         }
 
-        const member = trip.members.find((member) => member.user.toString() === memberId);
+        const memberToUpdate = trip.members.find((member) => member.user.toString() === memberId);
 
-        if (!member) {
+        if (!memberToUpdate) {
             throw new NotFoundException('Member not found in this trip');
         }
 
@@ -301,15 +295,15 @@ export class TripsService {
         if (updateMemberStatusDto.status === MemberStatus.JOINED) {
             const joinedMembers = trip.members.filter((m) => m.status === MemberStatus.JOINED);
 
-            if (joinedMembers.length >= trip.maxParticipants && member.status !== MemberStatus.JOINED) {
+            if (joinedMembers.length >= trip.maxParticipants && memberToUpdate.status !== MemberStatus.JOINED) {
                 throw new BadRequestException('Trip is full');
             }
         }
 
-        member.status = updateMemberStatusDto.status;
+        memberToUpdate.status = updateMemberStatusDto.status;
 
         if (updateMemberStatusDto.status === MemberStatus.JOINED) {
-            member.joinedAt = new Date();
+            memberToUpdate.joinedAt = new Date();
         }
 
         await trip.save();
@@ -375,9 +369,11 @@ export class TripsService {
             throw new NotFoundException('Trip not found');
         }
 
-        const excludedIds = trip.members
-            .map((m) => m.user.toString())
-            .concat(trip.createdBy.toString(), userId);
+        const excludedIds = [
+            ...trip.members.map((m) => m.user.toString()),
+            trip.createdBy.toString(),
+            userId
+        ];
 
         // Fetch candidate users not already on the trip
         const candidates = await this.userModel.find({ _id: { $nin: excludedIds } }).exec();
@@ -388,13 +384,13 @@ export class TripsService {
                 (u) => `ID: ${u._id}, Name: ${u.fullName}, Tags: ${(u.tags || []).join(', ')}, Bio: ${u.bio}`
             )
             .join('\n');
-        const prompt = `Recommend up to 5 user IDs best matching keyword "${dto.keyword}" from the users list:\n${profiles}`;
+        const prompt = `Recommend up to 10 user IDs best matching keyword "${dto.keyword}" from the users list:\n${profiles}`;
 
         try {
             const completion = await this.openai.chat.completions.create({
                 messages: [{ role: 'user', content: prompt }],
                 model: '', // Empty string when using deployment
-                max_tokens: 128
+                max_tokens: 256
             });
 
             let recommendedIds: string[] = [];
@@ -417,14 +413,14 @@ export class TripsService {
                     .map((u) => u._id.toString());
             }
 
-            let recommended = candidates.filter((u) => recommendedIds.includes(u._id.toString()));
+            let recommended = candidates.filter((u) => recommendedIds.includes((u._id as Types.ObjectId).toString()));
 
             if (recommended.length === 0) {
                 // fallback to simple search
-                recommended = candidates.slice(0, 5);
+                recommended = candidates.slice(0, 10);
             }
 
-            return recommended;
+            return recommended.slice(0, 10);
         } catch (error) {
             console.error('Azure OpenAI API error:', error);
             // fallback to simple tag match
@@ -435,10 +431,10 @@ export class TripsService {
                         Array.isArray(u.tags) &&
                         u.tags.some((tag) => tag.toLowerCase().includes(keywordLower))
                 )
-                .slice(0, 5);
+                .slice(0, 10);
 
             if (recommended.length === 0) {
-                return candidates.slice(0, 5);
+                return candidates.slice(0, 10);
             }
 
             return recommended;

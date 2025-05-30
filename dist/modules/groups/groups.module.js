@@ -9,11 +9,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GroupsModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const groups_service_1 = require("./groups.service");
-const groups_controller_1 = require("./groups.controller");
-const group_schema_1 = require("./schema/group.schema");
 const trips_schema_1 = require("../trips/schema/trips.schema");
 const users_schema_1 = require("../users/schema/users.schema");
+const groups_controller_1 = require("./groups.controller");
+const groups_service_1 = require("./groups.service");
+const group_schema_1 = require("./schema/group.schema");
 let GroupsModule = class GroupsModule {
 };
 GroupsModule = __decorate([
@@ -22,7 +22,7 @@ GroupsModule = __decorate([
             mongoose_1.MongooseModule.forFeature([
                 { name: group_schema_1.Group.name, schema: group_schema_1.GroupSchema },
                 { name: trips_schema_1.Trips.name, schema: trips_schema_1.TripsSchema },
-                { name: users_schema_1.Users.name, schema: users_schema_1.UsersSchema },
+                { name: users_schema_1.Users.name, schema: users_schema_1.UsersSchema }
             ])
         ],
         providers: [groups_service_1.GroupsService],
