@@ -21,7 +21,6 @@ export async function bootstrap(): Promise<NestExpressApplication> {
     });
 
     app.setGlobalPrefix('/api', { exclude: [{ path: '/manifest/:startUrl', method: RequestMethod.GET }] });
-    app.enable('trust proxy');
     app.use(helmet());
     app.use(
         rateLimit({
@@ -50,16 +49,11 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
     const configService = app.select(SharedModule).get(ApiConfigService);
 
-    if (configService.documentationEnabled) {
         setupSwagger(app);
-    }
 
     app.use(expressCtx);
 
-    // Starts listening for shutdown hooks
-    if (!configService.isDevelopment) {
         app.enableShutdownHooks();
-    }
 
     const port = configService.serverConfig.port;
 
