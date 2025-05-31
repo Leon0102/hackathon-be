@@ -47,18 +47,6 @@ export class AwsS3Service {
 
         return key;
     }
-
-    getSignedUrl(key: string): Promise<string> {
-        const command = new GetObjectCommand({
-            Bucket: this.bucketName,
-            Key: key
-        });
-
-        return getSignedUrl(this.s3Client, command, {
-            expiresIn: this.expiresIn
-        });
-    }
-
     async deleteObject(key: string) {
         if (this.validateRemovedImage(key)) {
             await this.s3Client.send(
