@@ -23,10 +23,9 @@ import { Users } from '../users/schema/users.schema';
 import {
     CreateTripDto,
     JoinTripDto,
-    RecommendMembersDto,
-    SearchTripsDto,
     UpdateMemberStatusDto,
-    UpdateTripDto
+    UpdateTripDto,
+    AddUserToTripDto
 } from './dto/request';
 import { TripResponseDto } from './dto/response';
 import { TripsService } from './trips.service';
@@ -186,6 +185,32 @@ export class TripsController {
         });
     }
 
+    @Post(':id/add-user')
+    @Auth([UserRole.USER, UserRole.ADMIN])
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(ClassSerializerInterceptor)
+    @ApiOkResponse({
+        description: 'Add user to trip',
+        type: TripResponseDto
+    })
+    @ApiOperation({ summary: 'Add user to trip (creator only)' })
+    async addUserToTrip(
+        @Param('id') id: string,
+        @Body() addUserToTripDto: AddUserToTripDto,
+        @AuthUser() user: Users
+    ) {
+        const result = await this.tripsService.addUserToTrip(
+            id,
+            addUserToTripDto.userId,
+            user._id.toString(),
+            addUserToTripDto.message
+        );
+
+        return plainToInstance(TripResponseDto, result, {
+            excludeExtraneousValues: true
+        });
+    }
+
     @Patch(':id/members/:memberId/status')
     @Auth([UserRole.USER, UserRole.ADMIN])
     @HttpCode(HttpStatus.OK)
@@ -243,7 +268,7 @@ if (!result || !Array.isArray(result)) {
 
 // Remove sensitive data manually
 return result.map(user => ({
-    _id: user._id,
+    id: user._id?.toString?.() ?? user.id?.toString?.() ?? '',
     fullName: user.fullName,
     email: user.email,
     profilePictureUrl: user.profilePictureUrl,

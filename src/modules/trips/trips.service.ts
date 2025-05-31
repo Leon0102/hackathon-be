@@ -391,6 +391,75 @@ export class TripsService {
         return updatedTrip;
     }
 
+    async addUserToTrip(tripId: string, userIdToAdd: string, requestingUserId: string, message?: string): Promise<any> {
+        // Find the trip
+        const trip = await this.tripsModel.findById(tripId);
+
+        if (!trip) {
+            throw new NotFoundException('Trip not found');
+        }
+
+        // Only trip creator can add users directly
+        if (trip.createdBy.toString() !== requestingUserId) {
+            throw new ForbiddenException('Only trip creator can add users to the trip');
+        }
+
+        // Check if the user exists
+        const userToAdd = await this.userModel.findById(userIdToAdd);
+        if (!userToAdd) {
+            throw new NotFoundException('User to add not found');
+        }
+
+        // Check if user is already a member of the trip
+        const isAlreadyMember = trip.members.some((member) => member.user.toString() === userIdToAdd);
+        if (isAlreadyMember) {
+            throw new BadRequestException('User is already a member of this trip');
+        }
+
+        // Check if trip is full
+        const joinedMembers = trip.members.filter((m) => m.status === MemberStatus.JOINED);
+        if (joinedMembers.length >= trip.maxParticipants) {
+            throw new BadRequestException('Trip is full');
+        }
+
+        // Find the associated group for this trip
+        const group = await this.groupModel.findOne({ trip: tripId });
+        if (!group) {
+            throw new NotFoundException('No group available for this trip');
+        }
+
+        // Check if group is full
+        if (group.members.length >= group.maxParticipants) {
+            throw new BadRequestException('Group for this trip is full');
+        }
+
+        // Add user to the trip members with INVITED status
+        trip.members.push({
+            user: new Types.ObjectId(userIdToAdd),
+            status: MemberStatus.INVITED,
+            message: message
+        });
+        await trip.save();
+
+        // Add user to the group
+        group.members.push(new Types.ObjectId(userIdToAdd));
+        await group.save();
+
+        // Return the updated trip with populated members
+        const updatedTrip = await this.tripsModel
+            .findById(tripId)
+            .populate('createdBy', 'fullName email profilePictureUrl')
+            .populate('members.user', 'fullName email profilePictureUrl')
+            .lean()
+            .exec();
+
+        if (!updatedTrip) {
+            throw new NotFoundException('Trip not found after adding user');
+        }
+
+        return updatedTrip;
+    }
+
     async recommendMembers(tripId: string, userId: string): Promise<Users[]> {
         // Log the recommendation request
         await this.recLogModel.create({
