@@ -6,7 +6,8 @@ export enum RecommendationType {
   TRIP_MEMBERS = 'trip_members',
   GROUPS = 'groups',
   DESTINATIONS = 'destinations',
-  SIMILAR_USERS = 'similar_users'
+  SIMILAR_USERS = 'similar_users',
+  TRIPS = 'trips' // Added 'trips' as a valid enum value
 }
 
 // Enum for recommendation outcomes

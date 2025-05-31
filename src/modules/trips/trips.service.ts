@@ -653,6 +653,9 @@ Example response format: ["user_id_1", "user_id_2", "user_id_3"]`;
         const candidates = await this.tripsModel
             .find({ status: TripStatus.OPEN, 'members.user': { $ne: userId } })
             .populate('createdBy', 'fullName email')
+            .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .lean()
             .exec();
 
