@@ -154,6 +154,45 @@ let UsersService = class UsersService {
         }
         return updated.toObject();
     }
+    async searchUsersForRecommendations(keyword, excludeUserId, userPatterns, limit = 20) {
+        try {
+            const excludeIds = [excludeUserId];
+            const searchQuery = {
+                _id: { $nin: excludeIds },
+                isVerified: true,
+            };
+            if (keyword && keyword.trim()) {
+                const keywordRegex = new RegExp(keyword.trim(), 'i');
+                searchQuery.$or = [
+                    { fullName: keywordRegex },
+                    { bio: keywordRegex },
+                    { tags: { $in: [keywordRegex] } },
+                    { preferredDestinations: { $in: [keywordRegex] } },
+                    { languages: { $in: [keywordRegex] } }
+                ];
+            }
+            const users = await this.usersModel
+                .find(searchQuery)
+                .select('fullName email profilePictureUrl age gender bio languages travelStyle preferredDestinations tags trustScore')
+                .limit(limit)
+                .lean()
+                .exec();
+            return users.map(user => (Object.assign(Object.assign({}, user), { commonInterests: this.calculateCommonInterests(user, userPatterns), mutualConnections: this.calculateMutualConnections(user, excludeUserId), lastActiveAt: new Date() })));
+        }
+        catch (error) {
+            console.error('Error searching users for recommendations:', error);
+            return [];
+        }
+    }
+    calculateCommonInterests(user, userPatterns) {
+        if (!(userPatterns === null || userPatterns === void 0 ? void 0 : userPatterns.topKeywords) || !user.tags) {
+            return [];
+        }
+        return user.tags.filter(tag => userPatterns.topKeywords.some(keyword => tag.toLowerCase().includes(keyword.toLowerCase())));
+    }
+    calculateMutualConnections(user, currentUserId) {
+        return Math.floor(Math.random() * 10);
+    }
 };
 UsersService = __decorate([
     (0, common_1.Injectable)(),

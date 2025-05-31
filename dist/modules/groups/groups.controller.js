@@ -26,27 +26,6 @@ let GroupsController = class GroupsController {
     constructor(groupsService) {
         this.groupsService = groupsService;
     }
-    async createGroup(dto, user) {
-        var _a, _b;
-        const result = await this.groupsService.createGroup(dto, ((_a = user.id) !== null && _a !== void 0 ? _a : (_b = user._id) === null || _b === void 0 ? void 0 : _b.toString()));
-        return (0, class_transformer_1.plainToInstance)(response_1.GroupResponseDto, result, {
-            excludeExtraneousValues: true
-        });
-    }
-    async joinGroup(id, user) {
-        var _a, _b;
-        const result = await this.groupsService.joinGroup(id, ((_a = user.id) !== null && _a !== void 0 ? _a : (_b = user._id) === null || _b === void 0 ? void 0 : _b.toString()));
-        return (0, class_transformer_1.plainToInstance)(response_1.GroupResponseDto, result, {
-            excludeExtraneousValues: true
-        });
-    }
-    async leaveGroup(id, user) {
-        var _a, _b;
-        const result = await this.groupsService.leaveGroup(id, ((_a = user.id) !== null && _a !== void 0 ? _a : (_b = user._id) === null || _b === void 0 ? void 0 : _b.toString()));
-        return (0, class_transformer_1.plainToInstance)(response_1.GroupResponseDto, result, {
-            excludeExtraneousValues: true
-        });
-    }
     async getMyGroups(user) {
         var _a, _b;
         const result = await this.groupsService.getMyGroups(((_a = user.id) !== null && _a !== void 0 ? _a : (_b = user._id) === null || _b === void 0 ? void 0 : _b.toString()));
@@ -68,51 +47,6 @@ let GroupsController = class GroupsController {
         }));
     }
 };
-__decorate([
-    (0, common_1.Post)(),
-    (0, decorators_1.Auth)([constants_1.UserRole.USER, constants_1.UserRole.ADMIN]),
-    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
-    (0, swagger_1.ApiOkResponse)({
-        description: 'Create a new group',
-        type: response_1.GroupResponseDto
-    }),
-    (0, swagger_1.ApiOperation)({ summary: 'Create a new group' }),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.AuthUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [request_1.CreateGroupDto, users_schema_1.Users]),
-    __metadata("design:returntype", Promise)
-], GroupsController.prototype, "createGroup", null);
-__decorate([
-    (0, common_1.Post)(':id/join'),
-    (0, decorators_1.Auth)([constants_1.UserRole.USER, constants_1.UserRole.ADMIN]),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOkResponse)({
-        description: 'Join a group',
-        type: response_1.GroupResponseDto
-    }),
-    (0, swagger_1.ApiOperation)({ summary: 'Join a group' }),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, decorators_1.AuthUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, users_schema_1.Users]),
-    __metadata("design:returntype", Promise)
-], GroupsController.prototype, "joinGroup", null);
-__decorate([
-    (0, common_1.Delete)(':id/leave'),
-    (0, decorators_1.Auth)([constants_1.UserRole.USER, constants_1.UserRole.ADMIN]),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOkResponse)({
-        description: 'Leave a group',
-        type: response_1.GroupResponseDto
-    }),
-    (0, swagger_1.ApiOperation)({ summary: 'Leave a group' }),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, decorators_1.AuthUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, users_schema_1.Users]),
-    __metadata("design:returntype", Promise)
-], GroupsController.prototype, "leaveGroup", null);
 __decorate([
     (0, common_1.Get)('my-groups'),
     (0, decorators_1.Auth)([constants_1.UserRole.USER, constants_1.UserRole.ADMIN]),

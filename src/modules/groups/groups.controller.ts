@@ -2,7 +2,6 @@ import {
     Body,
     ClassSerializerInterceptor,
     Controller,
-    Delete,
     Get,
     HttpCode,
     HttpStatus,
@@ -16,7 +15,7 @@ import { plainToInstance } from 'class-transformer';
 import { UserRole } from '../../constants';
 import { Auth, AuthUser } from '../../decorators';
 import { Users } from '../users/schema/users.schema';
-import { CreateGroupDto, RecommendGroupsDto } from './dto/request';
+import { RecommendGroupsDto } from './dto/request';
 import { GroupResponseDto } from './dto/response';
 import { GroupsService } from './groups.service';
 
@@ -25,54 +24,6 @@ import { GroupsService } from './groups.service';
 @UseInterceptors(ClassSerializerInterceptor)
 export class GroupsController {
     constructor(private readonly groupsService: GroupsService) {}
-
-    @Post()
-    @Auth([UserRole.USER, UserRole.ADMIN])
-    @HttpCode(HttpStatus.CREATED)
-    @ApiOkResponse({
-        description: 'Create a new group',
-        type: GroupResponseDto
-    })
-    @ApiOperation({ summary: 'Create a new group' })
-    async createGroup(@Body() dto: CreateGroupDto, @AuthUser() user: Users) {
-        const result = await this.groupsService.createGroup(dto, (user.id ?? user._id?.toString()) as string);
-
-        return plainToInstance(GroupResponseDto, result, {
-            excludeExtraneousValues: true
-        });
-    }
-
-    @Post(':id/join')
-    @Auth([UserRole.USER, UserRole.ADMIN])
-    @HttpCode(HttpStatus.OK)
-    @ApiOkResponse({
-        description: 'Join a group',
-        type: GroupResponseDto
-    })
-    @ApiOperation({ summary: 'Join a group' })
-    async joinGroup(@Param('id') id: string, @AuthUser() user: Users) {
-        const result = await this.groupsService.joinGroup(id, (user.id ?? user._id?.toString()) as string);
-
-        return plainToInstance(GroupResponseDto, result, {
-            excludeExtraneousValues: true
-        });
-    }
-
-    @Delete(':id/leave')
-    @Auth([UserRole.USER, UserRole.ADMIN])
-    @HttpCode(HttpStatus.OK)
-    @ApiOkResponse({
-        description: 'Leave a group',
-        type: GroupResponseDto
-    })
-    @ApiOperation({ summary: 'Leave a group' })
-    async leaveGroup(@Param('id') id: string, @AuthUser() user: Users) {
-        const result = await this.groupsService.leaveGroup(id, (user.id ?? user._id?.toString()) as string);
-
-        return plainToInstance(GroupResponseDto, result, {
-            excludeExtraneousValues: true
-        });
-    }
 
     @Get('my-groups')
     @Auth([UserRole.USER, UserRole.ADMIN])

@@ -6,7 +6,7 @@ import { AzureOpenAI } from 'openai';
 import { MemberStatus, TripStatus } from '../../constants';
 import type { Users } from '../users/schema/users.schema';
 import type { GroupDocument } from '../groups/schema/group.schema';
-import type { CreateTripDto, JoinTripDto, UpdateMemberStatusDto, UpdateTripDto, SearchTripsDto } from './dto/request';
+import type { CreateTripDto, JoinTripDto, UpdateMemberStatusDto, UpdateTripDto } from './dto/request';
 import type { RecommendMembersDto } from './dto/request/recommend-members.dto';
 import type { RecommendationLog } from './schema/recommendation-log.schema';
 import type { TripsDocument } from './schema/trips.schema';
@@ -56,6 +56,18 @@ export class TripsService {
         });
 
         const savedTrip = await trip.save();
+
+        // Automatically create a linked group for the trip
+        const group = new this.groupModel({
+            trip: savedTrip._id,
+            name: `${savedTrip.destination} Group`,
+            owner: new Types.ObjectId(creatorId),
+            members: [new Types.ObjectId(creatorId)],
+            maxParticipants: savedTrip.maxParticipants
+        });
+
+        await group.save();
+
         const populatedTrip = await this.tripsModel
             .findById(savedTrip._id)
             .populate('createdBy', 'fullName email profilePictureUrl')
@@ -153,6 +165,10 @@ export class TripsService {
             throw new ForbiddenException('Only trip creator can delete the trip');
         }
 
+        // Delete the associated group first
+        await this.groupModel.deleteOne({ trip: id });
+
+        // Delete the trip
         await this.tripsModel.findByIdAndDelete(id);
 
         return { message: 'Trip deleted successfully' };
@@ -197,39 +213,46 @@ export class TripsService {
             throw new BadRequestException('Trip is not open for joining');
         }
 
-        // Find all groups for this trip
-        const groups = await this.groupModel.find({ trip: id });
-
-        if (!groups.length) {
-            throw new NotFoundException('No groups available for this trip');
+        // Check if user is already a member of the trip
+        const isAlreadyMember = trip.members.some((member) => member.user.toString() === userId);
+        if (isAlreadyMember) {
+            throw new BadRequestException('You are already a member of this trip');
         }
 
-        // Check if user is already in any group for this trip
-        const isAlreadyInGroup = groups.some((group) =>
-            group.members.some((member) => member.toString() === userId)
-        );
-
-        if (isAlreadyInGroup) {
-            throw new BadRequestException('You are already a member of a group for this trip');
+        // Check if trip is full
+        if (trip.members.length >= trip.maxParticipants) {
+            throw new BadRequestException('Trip is full');
         }
 
-        // Find a group that is not full
-        const availableGroup = groups.find(
-            (group) => group.members.length < group.maxParticipants
-        );
+        // Find the associated group for this trip
+        const group = await this.groupModel.findOne({ trip: id });
 
-        if (!availableGroup) {
-            throw new BadRequestException('All groups for this trip are full');
+        if (!group) {
+            throw new NotFoundException('No group available for this trip');
         }
 
-        // Add user to the available group
-        availableGroup.members.push(new Types.ObjectId(userId));
-        await availableGroup.save();
+        // Check if group is full
+        if (group.members.length >= group.maxParticipants) {
+            throw new BadRequestException('Group for this trip is full');
+        }
 
-        // Return the updated trip with populated groups if needed
+        // Add user to the trip members
+        trip.members.push({
+            user: new Types.ObjectId(userId),
+            status: MemberStatus.REQUESTED,
+            joinedAt: new Date()
+        });
+        await trip.save();
+
+        // Add user to the group
+        group.members.push(new Types.ObjectId(userId));
+        await group.save();
+
+        // Return the updated trip
         return this.tripsModel
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
+            .populate('members.user', 'fullName email profilePictureUrl')
             .lean()
             .exec();
     }
@@ -253,8 +276,19 @@ export class TripsService {
             throw new BadRequestException('You are not a member of this trip');
         }
 
+        // Remove user from trip members
         trip.members.splice(memberIndex, 1);
         await trip.save();
+
+        // Also remove user from the associated group
+        const group = await this.groupModel.findOne({ trip: id });
+        if (group) {
+            const groupMemberIndex = group.members.findIndex((member) => member.toString() === userId);
+            if (groupMemberIndex !== -1) {
+                group.members.splice(groupMemberIndex, 1);
+                await group.save();
+            }
+        }
 
         const updatedTrip = await this.tripsModel
             .findById(id)

@@ -47,6 +47,14 @@ let TripsService = class TripsService {
                 }
             ] }));
         const savedTrip = await trip.save();
+        const group = new this.groupModel({
+            trip: savedTrip._id,
+            name: `${savedTrip.destination} Group`,
+            owner: new mongoose_2.Types.ObjectId(creatorId),
+            members: [new mongoose_2.Types.ObjectId(creatorId)],
+            maxParticipants: savedTrip.maxParticipants
+        });
+        await group.save();
         const populatedTrip = await this.tripsModel
             .findById(savedTrip._id)
             .populate('createdBy', 'fullName email profilePictureUrl')
@@ -126,6 +134,7 @@ let TripsService = class TripsService {
         if (trip.createdBy.toString() !== userId) {
             throw new common_1.ForbiddenException('Only trip creator can delete the trip');
         }
+        await this.groupModel.deleteOne({ trip: id });
         await this.tripsModel.findByIdAndDelete(id);
         return { message: 'Trip deleted successfully' };
     }
@@ -159,23 +168,32 @@ let TripsService = class TripsService {
         if (trip.status !== constants_1.TripStatus.OPEN) {
             throw new common_1.BadRequestException('Trip is not open for joining');
         }
-        const groups = await this.groupModel.find({ trip: id });
-        if (!groups.length) {
-            throw new common_1.NotFoundException('No groups available for this trip');
+        const isAlreadyMember = trip.members.some((member) => member.user.toString() === userId);
+        if (isAlreadyMember) {
+            throw new common_1.BadRequestException('You are already a member of this trip');
         }
-        const isAlreadyInGroup = groups.some((group) => group.members.some((member) => member.toString() === userId));
-        if (isAlreadyInGroup) {
-            throw new common_1.BadRequestException('You are already a member of a group for this trip');
+        if (trip.members.length >= trip.maxParticipants) {
+            throw new common_1.BadRequestException('Trip is full');
         }
-        const availableGroup = groups.find((group) => group.members.length < group.maxParticipants);
-        if (!availableGroup) {
-            throw new common_1.BadRequestException('All groups for this trip are full');
+        const group = await this.groupModel.findOne({ trip: id });
+        if (!group) {
+            throw new common_1.NotFoundException('No group available for this trip');
         }
-        availableGroup.members.push(new mongoose_2.Types.ObjectId(userId));
-        await availableGroup.save();
+        if (group.members.length >= group.maxParticipants) {
+            throw new common_1.BadRequestException('Group for this trip is full');
+        }
+        trip.members.push({
+            user: new mongoose_2.Types.ObjectId(userId),
+            status: constants_1.MemberStatus.REQUESTED,
+            joinedAt: new Date()
+        });
+        await trip.save();
+        group.members.push(new mongoose_2.Types.ObjectId(userId));
+        await group.save();
         return this.tripsModel
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
+            .populate('members.user', 'fullName email profilePictureUrl')
             .lean()
             .exec();
     }
@@ -193,6 +211,14 @@ let TripsService = class TripsService {
         }
         trip.members.splice(memberIndex, 1);
         await trip.save();
+        const group = await this.groupModel.findOne({ trip: id });
+        if (group) {
+            const groupMemberIndex = group.members.findIndex((member) => member.toString() === userId);
+            if (groupMemberIndex !== -1) {
+                group.members.splice(groupMemberIndex, 1);
+                await group.save();
+            }
+        }
         const updatedTrip = await this.tripsModel
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')

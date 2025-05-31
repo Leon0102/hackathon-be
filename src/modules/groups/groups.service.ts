@@ -1,11 +1,10 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AzureOpenAI } from 'openai';
 
 import { Users } from '../users/schema/users.schema';
 import { Trips } from '../trips/schema/trips.schema';
-import type { CreateGroupDto } from './dto/request/create-group.dto';
 import type { RecommendGroupsDto } from './dto/request/recommend-groups.dto';
 import type { GroupDocument } from './schema/group.schema';
 import { Group } from './schema/group.schema';
@@ -38,54 +37,6 @@ export class GroupsService {
             deployment,
             apiVersion
         });
-    }
-
-    async createGroup(createGroupDto: CreateGroupDto, userId: string): Promise<Group> {
-        const group = new this.groupModel({
-            ...createGroupDto,
-            owner: new Types.ObjectId(userId),
-            trip: new Types.ObjectId(createGroupDto.tripId),
-            members: [new Types.ObjectId(userId)]
-        });
-
-        return group.save();
-    }
-
-    async joinGroup(groupId: string, userId: string): Promise<Group> {
-        const group = await this.groupModel.findById(groupId);
-
-        if (!group) {
-            throw new NotFoundException('Group not found');
-        }
-
-        if (group.members.some((member) => member.toString() === userId)) {
-            throw new BadRequestException('Already a member');
-        }
-
-        // Check if group is full
-        if (group.members.length >= group.maxParticipants) {
-            throw new BadRequestException('Group is full');
-        }
-
-        group.members.push(new Types.ObjectId(userId));
-
-        return group.save();
-    }
-
-    async leaveGroup(groupId: string, userId: string): Promise<Group> {
-        const group = await this.groupModel.findById(groupId);
-
-        if (!group) {
-            throw new NotFoundException('Group not found');
-        }
-
-        if (group.owner.toString() === userId) {
-            throw new ForbiddenException('Owner cannot leave the group');
-        }
-
-        group.members = group.members.filter((m) => m.toString() !== userId);
-
-        return group.save();
     }
 
     async getMyGroups(userId: string): Promise<Group[]> {
@@ -185,6 +136,63 @@ export class GroupsService {
             }
 
             return recommended;
+        }
+    }
+
+    /**
+     * Search groups for recommendations based on keyword and user patterns
+     */
+    async searchGroupsForRecommendations(
+        keyword: string,
+        excludeUserId: string,
+        userPatterns?: any,
+        limit: number = 20
+    ): Promise<any[]> {
+        try {
+            // Fetch the user's current groups to exclude them
+            const userGroups = await this.groupModel
+                .find({ members: new Types.ObjectId(excludeUserId) })
+                .select('_id')
+                .lean()
+                .exec();
+
+            const excludedGroupIds = userGroups.map((g) => g._id.toString());
+
+            // Build search query
+            const searchQuery: any = {
+                _id: { $nin: excludedGroupIds }
+                // Note: Group schema doesn't have isPublic field, so we recommend all groups
+            };
+
+            // Search in multiple fields
+            if (keyword?.trim()) {
+                const keywordRegex = new RegExp(keyword.trim(), 'i');
+                searchQuery.$or = [
+                    { name: keywordRegex }
+                ];
+            }
+
+            const groups = await this.groupModel
+                .find(searchQuery)
+                .populate('owner', 'fullName email profilePictureUrl')
+                .populate('trip', 'destination startDate endDate')
+                .select('name maxParticipants members')
+                .limit(limit)
+                .lean()
+                .exec();
+
+            // Add recommendation-specific fields
+            return groups.map(group => ({
+                ...group,
+                memberCount: Array.isArray(group.members) ? group.members.length : 0,
+                isPublic: true, // Since we filter by this
+                tags: [], // Groups don't have tags in current schema
+                lastActivityAt: new Date() // Simplified for now
+            }));
+
+        } catch (error) {
+            console.error('Error searching groups for recommendations:', error);
+            return [];
         }
     }
 }

@@ -39,35 +39,6 @@ let GroupsService = class GroupsService {
             apiVersion
         });
     }
-    async createGroup(createGroupDto, userId) {
-        const group = new this.groupModel(Object.assign(Object.assign({}, createGroupDto), { owner: new mongoose_2.Types.ObjectId(userId), trip: new mongoose_2.Types.ObjectId(createGroupDto.tripId), members: [new mongoose_2.Types.ObjectId(userId)] }));
-        return group.save();
-    }
-    async joinGroup(groupId, userId) {
-        const group = await this.groupModel.findById(groupId);
-        if (!group) {
-            throw new common_1.NotFoundException('Group not found');
-        }
-        if (group.members.some((member) => member.toString() === userId)) {
-            throw new common_1.BadRequestException('Already a member');
-        }
-        if (group.members.length >= group.maxParticipants) {
-            throw new common_1.BadRequestException('Group is full');
-        }
-        group.members.push(new mongoose_2.Types.ObjectId(userId));
-        return group.save();
-    }
-    async leaveGroup(groupId, userId) {
-        const group = await this.groupModel.findById(groupId);
-        if (!group) {
-            throw new common_1.NotFoundException('Group not found');
-        }
-        if (group.owner.toString() === userId) {
-            throw new common_1.ForbiddenException('Owner cannot leave the group');
-        }
-        group.members = group.members.filter((m) => m.toString() !== userId);
-        return group.save();
-    }
     async getMyGroups(userId) {
         return this.groupModel.find({ members: new mongoose_2.Types.ObjectId(userId) }).exec();
     }
@@ -140,6 +111,38 @@ let GroupsService = class GroupsService {
                 return candidates.slice(0, 10);
             }
             return recommended;
+        }
+    }
+    async searchGroupsForRecommendations(keyword, excludeUserId, userPatterns, limit = 20) {
+        try {
+            const userGroups = await this.groupModel
+                .find({ members: new mongoose_2.Types.ObjectId(excludeUserId) })
+                .select('_id')
+                .lean()
+                .exec();
+            const excludedGroupIds = userGroups.map((g) => g._id.toString());
+            const searchQuery = {
+                _id: { $nin: excludedGroupIds }
+            };
+            if (keyword === null || keyword === void 0 ? void 0 : keyword.trim()) {
+                const keywordRegex = new RegExp(keyword.trim(), 'i');
+                searchQuery.$or = [
+                    { name: keywordRegex }
+                ];
+            }
+            const groups = await this.groupModel
+                .find(searchQuery)
+                .populate('owner', 'fullName email profilePictureUrl')
+                .populate('trip', 'destination startDate endDate')
+                .select('name maxParticipants members')
+                .limit(limit)
+                .lean()
+                .exec();
+            return groups.map(group => (Object.assign(Object.assign({}, group), { memberCount: Array.isArray(group.members) ? group.members.length : 0, isPublic: true, tags: [], lastActivityAt: new Date() })));
+        }
+        catch (error) {
+            console.error('Error searching groups for recommendations:', error);
+            return [];
         }
     }
 };

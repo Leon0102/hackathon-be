@@ -196,4 +196,79 @@ export class UsersService {
 
         return updated.toObject();
     }
+
+    /**
+     * Search users for recommendations based on keyword and user patterns
+     */
+    async searchUsersForRecommendations(
+        keyword: string,
+        excludeUserId: string,
+        userPatterns?: any,
+        limit: number = 20
+    ): Promise<any[]> {
+        try {
+            const excludeIds = [excludeUserId];
+
+            // Build search query
+            const searchQuery: any = {
+                _id: { $nin: excludeIds },
+                isVerified: true, // Only recommend verified users
+            };
+
+            // Search in multiple fields
+            if (keyword && keyword.trim()) {
+                const keywordRegex = new RegExp(keyword.trim(), 'i');
+                searchQuery.$or = [
+                    { fullName: keywordRegex },
+                    { bio: keywordRegex },
+                    { tags: { $in: [keywordRegex] } },
+                    { preferredDestinations: { $in: [keywordRegex] } },
+                    { languages: { $in: [keywordRegex] } }
+                ];
+            }
+
+            const users = await this.usersModel
+                .find(searchQuery)
+                .select('fullName email profilePictureUrl age gender bio languages travelStyle preferredDestinations tags trustScore')
+                .limit(limit)
+                .lean()
+                .exec();
+
+            // Add recommendation-specific fields
+            return users.map(user => ({
+                ...user,
+                commonInterests: this.calculateCommonInterests(user, userPatterns),
+                mutualConnections: this.calculateMutualConnections(user, excludeUserId),
+                lastActiveAt: new Date() // Simplified for now
+            }));
+
+        } catch (error) {
+            console.error('Error searching users for recommendations:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Calculate common interests between users (simplified)
+     */
+    private calculateCommonInterests(user: any, userPatterns?: any): string[] {
+        if (!userPatterns?.topKeywords || !user.tags) {
+            return [];
+        }
+
+        return user.tags.filter(tag =>
+            userPatterns.topKeywords.some(keyword =>
+                tag.toLowerCase().includes(keyword.toLowerCase())
+            )
+        );
+    }
+
+    /**
+     * Calculate mutual connections (simplified - would need actual connection data)
+     */
+    private calculateMutualConnections(user: any, currentUserId: string): number {
+        // This would typically require a connections/friends collection
+        // For now, return a random number for demonstration
+        return Math.floor(Math.random() * 10);
+    }
 }
