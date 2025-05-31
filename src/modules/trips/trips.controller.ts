@@ -3,6 +3,7 @@ import {
     ClassSerializerInterceptor,
     Controller,
     Delete,
+    ForbiddenException,
     Get,
     HttpCode,
     HttpStatus,
@@ -56,18 +57,30 @@ export class TripsController {
     @HttpCode(HttpStatus.OK)
     @UseInterceptors(ClassSerializerInterceptor)
     @ApiOkResponse({
-        description: 'Get all trips with pagination',
+        description: 'Get all trips or AI recommendations',
         type: [TripResponseDto]
     })
-    @ApiOperation({ summary: 'Get all trips' })
+    @ApiOperation({ summary: 'Get all trips or recommend trips if requested' })
     @ApiQuery({ name: 'page', required: false, type: Number })
     @ApiQuery({ name: 'limit', required: false, type: Number })
-    async getAllTrips(@Query('page') page = 1, @Query('limit') limit = 10) {
+    @ApiQuery({ name: 'recommend', required: false, type: Boolean, description: 'Set true to get AI-recommended trips for current user' })
+    async getAllTrips(
+        @Query('page') page = 1,
+        @Query('limit') limit = 10,
+        @Query('recommend') recommend?: boolean,
+        @AuthUser() user?: Users
+    ) {
+        if (recommend) {
+            // Ensure authenticated for recommendations
+            if (!user) {
+                throw new ForbiddenException('Authentication required for recommendations');
+            }
+            const rec = await this.tripsService.recommendTrips(user._id.toString(), limit);
+            return plainToInstance(TripResponseDto, rec, { excludeExtraneousValues: true });
+        }
+        // Standard list of open trips
         const result = await this.tripsService.getAllTrips(page, limit);
-
-        return plainToInstance(TripResponseDto, result, {
-            excludeExtraneousValues: true
-        });
+        return plainToInstance(TripResponseDto, result, { excludeExtraneousValues: true });
     }
 
     @Get('my-trips')
@@ -279,6 +292,7 @@ return result.map(user => ({
     travelStyle: user.travelStyle,
     budget: user.budget,
     preferredDestinations: user.preferredDestinations,
+    location: user.location,
     trustScore: user.trustScore,
     isVerified: user.isVerified,
     role: user.role,

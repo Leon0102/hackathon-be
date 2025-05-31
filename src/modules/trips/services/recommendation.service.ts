@@ -194,7 +194,7 @@ export class RecommendationService {
     return groups.map((group, index) => ({
       id: group._id.toString(),
       type: 'group' as const,
-      score: this.calculateGroupRelevanceScore(group, keyword, userPatterns),
+      score: this.calculateUserRelevanceScore(group, keyword, userPatterns),
       metadata: {
         name: group.name,
         description: group.description,
@@ -456,6 +456,7 @@ export class RecommendationService {
     // Keyword matching
     if (user.fullName?.toLowerCase().includes(keyword.toLowerCase())) score += 0.3;
     if (user.bio?.toLowerCase().includes(keyword.toLowerCase())) score += 0.2;
+    if (user.location?.toLowerCase().includes(keyword.toLowerCase())) score += 0.25;
 
     // Pattern matching
     if (userPatterns?.topKeywords?.includes(keyword)) score += 0.3;
@@ -466,23 +467,56 @@ export class RecommendationService {
     // Mutual connections
     if (user.mutualConnections > 0) score += Math.min(user.mutualConnections * 0.05, 0.2);
 
-    return Math.min(score, 1.0);
-  }
+    // Location proximity bonus (if we have user's location in patterns)
+    if (userPatterns?.userLocation && user.location) {
+      if (this.isNearbyLocation(userPatterns.userLocation, user.location)) score += 0.15;
+    }
 
-  private calculateGroupRelevanceScore(group: any, keyword: string, userPatterns: any): number {
-    let score = 0.5;
-
-    if (group.name?.toLowerCase().includes(keyword.toLowerCase())) score += 0.4;
-    if (group.description?.toLowerCase().includes(keyword.toLowerCase())) score += 0.2;
-
-    if (group.tags?.some(tag => tag.toLowerCase().includes(keyword.toLowerCase()))) score += 0.3;
-
-    // Active groups get bonus
-    if (group.lastActivityAt && Date.now() - new Date(group.lastActivityAt).getTime() < 7 * 24 * 60 * 60 * 1000) {
-      score += 0.1;
+    // Location relevance to trip destination (keyword)
+    if (user.location && this.isLocationRelevantToKeyword(user.location, keyword)) {
+      score += 0.2;
     }
 
     return Math.min(score, 1.0);
+  }
+
+  /**
+   * Returns true if two locations are in the same city or nearby (simple string match or country match)
+   */
+  private isNearbyLocation(locA: string, locB: string): boolean {
+    if (!locA || !locB) return false;
+    const a = locA.toLowerCase();
+    const b = locB.toLowerCase();
+    // Exact match
+    if (a === b) return true;
+    // Same city (before comma)
+    const cityA = a.split(',')[0].trim();
+    const cityB = b.split(',')[0].trim();
+    if (cityA && cityA === cityB) return true;
+    // Same country (after comma)
+    const countryA = a.split(',').slice(1).join(',').trim();
+    const countryB = b.split(',').slice(1).join(',').trim();
+    if (countryA && countryA === countryB) return true;
+    // Fuzzy match: substring
+    if (a.includes(b) || b.includes(a)) return true;
+    return false;
+  }
+
+  /**
+   * Returns true if the user's location is relevant to the trip destination/keyword (city or country match)
+   */
+  private isLocationRelevantToKeyword(userLocation: string, keyword: string): boolean {
+    if (!userLocation || !keyword) return false;
+    const loc = userLocation.toLowerCase();
+    const key = keyword.toLowerCase();
+    // City or country in keyword
+    if (loc.includes(key) || key.includes(loc)) return true;
+    // Compare city and country parts
+    const locParts = loc.split(',').map(s => s.trim());
+    for (const part of locParts) {
+      if (key.includes(part) || part.includes(key)) return true;
+    }
+    return false;
   }
 
   // Mock methods - would be replaced with actual implementations

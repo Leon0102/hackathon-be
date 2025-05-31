@@ -223,13 +223,14 @@ export class UsersService {
                     { bio: keywordRegex },
                     { tags: { $in: [keywordRegex] } },
                     { preferredDestinations: { $in: [keywordRegex] } },
-                    { languages: { $in: [keywordRegex] } }
+                    { languages: { $in: [keywordRegex] } },
+                    { location: keywordRegex }
                 ];
             }
 
             const users = await this.usersModel
                 .find(searchQuery)
-                .select('fullName email profilePictureUrl age gender bio languages travelStyle preferredDestinations tags trustScore')
+                .select('fullName email profilePictureUrl age gender bio languages travelStyle preferredDestinations location tags trustScore')
                 .limit(limit)
                 .lean()
                 .exec();

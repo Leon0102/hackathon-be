@@ -543,7 +543,7 @@ export class TripsService {
         // Use Azure OpenAI to recommend best matching user IDs
         const profiles = candidates
             .map(
-                (u) => `ID: ${u._id}, Name: ${u.fullName || 'Unknown'}, Tags: ${(u.tags || []).join(', ')}, Bio: ${u.bio || 'No bio'}`
+                (u) => `ID: ${u._id}, Name: ${u.fullName || 'Unknown'}, Location: ${u.location || 'Not specified'}, Tags: ${(u.tags || []).join(', ')}, Bio: ${u.bio || 'No bio'}, Travel Style: ${u.travelStyle || 'Not specified'}, Budget: ${u.budget || 'Not specified'}`
             )
             .join('\n');
 
@@ -661,12 +661,12 @@ Example response format: ["user_id_1", "user_id_2", "user_id_3"]`;
         }
 
         // Build profiles and trip summaries for AI
-        const userProfile = `Tags: ${(user.tags || []).join(', ')}; TravelStyle: ${user.travelStyle}; Budget: ${user.budget}; Preferred: ${(user.preferredDestinations || []).join(', ')}`;
+        const userProfile = `Location: ${user.location || 'Not specified'}; Tags: ${(user.tags || []).join(', ')}; TravelStyle: ${user.travelStyle}; Budget: ${user.budget}; Preferred: ${(user.preferredDestinations || []).join(', ')}; TrustScore: ${user.trustScore}; Verified: ${user.isVerified}`;
         const tripList = candidates
             .map(t => `ID: ${t._id}, Dest: ${t.destination}, Purposes: ${(t.travelPurposes || []).join(', ')}, Interests: ${(t.interests || []).join(', ')}`)
             .join('\n');
 
-        const prompt = `You are a travel recommendation system. Given a user profile and a list of upcoming trips, return a JSON array of up to ${maxResults} trip IDs that best match the user's preferences. Respond with ONLY the JSON array.`;
+        const prompt = `You are a travel recommendation system. Given a user profile and a list of upcoming trips, return a JSON array of up to ${maxResults} trip IDs that best match the user's preferences. Prioritize trips where the user is near other users or near the trip destination. Respond with ONLY the JSON array.`;
 
         // Call Azure OpenAI
         const completion = await this.openai.chat.completions.create({

@@ -53,6 +53,10 @@ export class CreateUserDto {
     @IsOptional()
     preferredDestinations?: string[];
 
+    @StringField({ required: false })
+    @IsOptional()
+    location?: string;
+
     @NumberField({ required: false })
     @IsOptional()
     @Min(0)

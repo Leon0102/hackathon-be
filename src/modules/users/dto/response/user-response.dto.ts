@@ -54,6 +54,9 @@ export class UserResponseDto {
     preferredDestinations: string[];
 
     @Expose()
+    location?: string;
+
+    @Expose()
     trustScore: number;
 
     @Expose()

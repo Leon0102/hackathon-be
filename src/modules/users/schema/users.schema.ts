@@ -48,6 +48,9 @@ export class Users extends Document {
     @Prop({ type: [String], default: [] })
     preferredDestinations: string[];
 
+    @Prop({ type: String, trim: true })
+    location: string;
+
     @Prop({ type: Number, default: 0, min: 0, max: 100 })
     trustScore: number;
 
@@ -79,7 +82,8 @@ UsersSchema.virtual('profileCompletion').get(function () {
         'bio',
         'languages',
         'travelStyle',
-        'preferredDestinations'
+        'preferredDestinations',
+        'location'
     ];
     const completedFields = fields.filter((field) => {
         const value = this[field];

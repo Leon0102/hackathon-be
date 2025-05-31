@@ -52,6 +52,30 @@ async function main() {
     'Sri Lanka', 'Cambodia', 'Laos', 'Myanmar', 'Philippines', 'Malaysia'
   ];
 
+  // Generate realistic user home locations
+  const userLocations = [
+    'San Francisco, USA', 'Los Angeles, USA', 'New York, USA', 'Chicago, USA', 'Seattle, USA',
+    'London, UK', 'Manchester, UK', 'Edinburgh, UK', 'Birmingham, UK',
+    'Paris, France', 'Lyon, France', 'Marseille, France', 'Nice, France',
+    'Berlin, Germany', 'Munich, Germany', 'Hamburg, Germany', 'Frankfurt, Germany',
+    'Madrid, Spain', 'Barcelona, Spain', 'Valencia, Spain', 'Seville, Spain',
+    'Rome, Italy', 'Milan, Italy', 'Naples, Italy', 'Florence, Italy',
+    'Amsterdam, Netherlands', 'Rotterdam, Netherlands', 'The Hague, Netherlands',
+    'Brussels, Belgium', 'Antwerp, Belgium', 'Zurich, Switzerland', 'Geneva, Switzerland',
+    'Vienna, Austria', 'Salzburg, Austria', 'Stockholm, Sweden', 'Gothenburg, Sweden',
+    'Copenhagen, Denmark', 'Aarhus, Denmark', 'Oslo, Norway', 'Bergen, Norway',
+    'Helsinki, Finland', 'Toronto, Canada', 'Vancouver, Canada', 'Montreal, Canada',
+    'Sydney, Australia', 'Melbourne, Australia', 'Brisbane, Australia', 'Perth, Australia',
+    'Tokyo, Japan', 'Osaka, Japan', 'Kyoto, Japan', 'Yokohama, Japan',
+    'Seoul, South Korea', 'Busan, South Korea', 'Singapore', 'Hong Kong',
+    'Bangkok, Thailand', 'Chiang Mai, Thailand', 'Kuala Lumpur, Malaysia',
+    'Jakarta, Indonesia', 'Bali, Indonesia', 'Manila, Philippines', 'Cebu, Philippines',
+    'Ho Chi Minh City, Vietnam', 'Hanoi, Vietnam', 'Mumbai, India', 'Delhi, India',
+    'Bangalore, India', 'Chennai, India', 'Dubai, UAE', 'Abu Dhabi, UAE',
+    'Tel Aviv, Israel', 'Istanbul, Turkey', 'Athens, Greece', 'Lisbon, Portugal',
+    'Prague, Czech Republic', 'Budapest, Hungary', 'Warsaw, Poland', 'Bucharest, Romania'
+  ];
+
   // Create 100 realistic fake users
   console.log('👥 Creating users...');
   const users: any[] = [];
@@ -70,6 +94,8 @@ async function main() {
       travelStyle: faker.helpers.arrayElement(Object.values(TravelStyle)),
       budget: faker.number.int({ min: 500, max: 15000 }),
       preferredDestinations: faker.helpers.arrayElements(destinations, { min: 2, max: 6 }),
+      // Use a realistic full address for location
+      location: `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.country()}`,
       trustScore: faker.number.int({ min: 60, max: 100 }),
       isVerified: faker.datatype.boolean({ probability: 0.7 }),
       role: UserRole.USER,
