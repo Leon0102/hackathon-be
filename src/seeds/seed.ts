@@ -177,8 +177,11 @@ async function main() {
     for (let i = 0; i < imageCount; i++) {
       const category = faker.helpers.arrayElement(imageCategories);
       const size = faker.helpers.arrayElement(['800x600', '1024x768', '1200x800']);
-      // Using Lorem Picsum for realistic placeholder images
-      images.push(`https://picsum.photos/${size}?random=${Date.now()}-${i}-${day}`);
+      const [width, height] = size.split('x').map(Number);
+      // Use Faker's LoremFlickr for realistic placeholder images
+      images.push(
+        faker.image.urlLoremFlickr({ width, height, category })
+      );
     }
 
     return images;

@@ -133,6 +133,7 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .sort({ createdAt: -1 })
             .lean()
             .exec();
@@ -154,6 +155,7 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .lean()
             .exec();
 
@@ -208,6 +210,7 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .sort({ createdAt: -1 })
             .lean()
             .exec();
@@ -236,7 +239,10 @@ export class TripsService {
         }
 
         // Find the associated group for this trip
-        const group = await this.groupModel.findOne({ trip: id });
+        if (!trip.group) {
+            throw new NotFoundException('No group available for this trip');
+        }
+        const group = await this.groupModel.findById(trip.group).exec();
 
         if (!group) {
             throw new NotFoundException('No group available for this trip');
@@ -265,6 +271,7 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .lean()
             .exec();
     }
@@ -293,12 +300,16 @@ export class TripsService {
         await trip.save();
 
         // Also remove user from the associated group
-        const group = await this.groupModel.findOne({ trip: id });
-        if (group) {
-            const groupMemberIndex = group.members.findIndex((member) => member.toString() === userId);
-            if (groupMemberIndex !== -1) {
-                group.members.splice(groupMemberIndex, 1);
-                await group.save();
+        if (!trip.group) {
+            // No group linked
+        } else {
+            const group = await this.groupModel.findById(trip.group).exec();
+            if (group) {
+                const groupMemberIndex = group.members.findIndex((member) => member.toString() === userId);
+                if (groupMemberIndex !== -1) {
+                    group.members.splice(groupMemberIndex, 1);
+                    await group.save();
+                }
             }
         }
 
@@ -307,6 +318,7 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .exec();
 
         if (!updatedTrip) {
@@ -360,6 +372,7 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .exec();
 
         if (!updatedTrip) {
@@ -398,6 +411,7 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .exec();
 
         if (!updatedTrip) {
@@ -442,7 +456,11 @@ export class TripsService {
         }
 
         // Find the associated group for this trip
-        const group = await this.groupModel.findOne({ trip: tripId });
+        if (!trip.group) {
+            throw new NotFoundException('No group available for this trip');
+        }
+        const group = await this.groupModel.findById(trip.group).exec();
+
         if (!group) {
             throw new NotFoundException('No group available for this trip');
         }
@@ -470,6 +488,7 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .lean()
             .exec();
 
