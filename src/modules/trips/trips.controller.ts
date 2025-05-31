@@ -60,6 +60,7 @@ export class TripsController {
         description: 'Get all trips or AI recommendations',
         type: [TripResponseDto]
     })
+    @Auth([UserRole.USER, UserRole.ADMIN])
     @ApiOperation({ summary: 'Get all trips or recommend trips if requested' })
     @ApiQuery({ name: 'page', required: false, type: Number })
     @ApiQuery({ name: 'limit', required: false, type: Number })
