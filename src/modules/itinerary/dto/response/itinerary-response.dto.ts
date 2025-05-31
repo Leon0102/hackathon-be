@@ -72,3 +72,91 @@ export class ItineraryResponseDto {
     @Expose()
     updatedAt: Date;
 }
+
+export class FakeActivityResponseDto extends ActivityResponseDto {
+    @ApiProperty({
+        description: 'Travel image URL for the activity',
+        example: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e'
+    })
+    @Expose()
+    imageUrl?: string;
+}
+
+export class FakeDayItineraryResponseDto {
+    @ApiProperty({
+        description: 'Day number',
+        example: 1
+    })
+    @Expose()
+    day: number;
+
+    @ApiProperty({
+        description: 'Date in ISO format',
+        example: '2024-06-01'
+    })
+    @Expose()
+    date: string;
+
+    @ApiProperty({
+        description: 'Activities for the day with images',
+        type: [FakeActivityResponseDto]
+    })
+    @Expose()
+    @Type(() => FakeActivityResponseDto)
+    activities: FakeActivityResponseDto[];
+}
+
+export class FakeItineraryResponseDto {
+    @ApiProperty({
+        description: 'Trip ID',
+        example: '64f7b1234567890123456789'
+    })
+    @Expose()
+    tripId: string;
+
+    @ApiProperty({
+        description: 'Destination name',
+        example: 'Tokyo'
+    })
+    @Expose()
+    destination: string;
+
+    @ApiProperty({
+        description: 'Total number of days',
+        example: 7
+    })
+    @Expose()
+    totalDays: number;
+
+    @ApiProperty({
+        description: 'Daily itineraries with activities and images',
+        type: [FakeDayItineraryResponseDto]
+    })
+    @Expose()
+    @Type(() => FakeDayItineraryResponseDto)
+    itineraries: FakeDayItineraryResponseDto[];
+}
+
+export class GenerateAllItinerariesResponseDto {
+    @ApiProperty({
+        description: 'Number of trips processed',
+        example: 25
+    })
+    @Expose()
+    processedTrips: number;
+
+    @ApiProperty({
+        description: 'Number of itineraries generated',
+        example: 175
+    })
+    @Expose()
+    generatedItineraries: number;
+
+    @ApiProperty({
+        description: 'Any errors encountered during generation',
+        example: ['Trip 64f7b1234567890123456789: Invalid date range (0 days)'],
+        type: [String]
+    })
+    @Expose()
+    errors: string[];
+}

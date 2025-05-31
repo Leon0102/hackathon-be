@@ -202,7 +202,7 @@ export class TripsController {
         const result = await this.tripsService.addUserToTrip(
             id,
             addUserToTripDto.userId,
-            user._id.toString(),
+            user.id ?? user._id?.toString(),
             addUserToTripDto.message
         );
 

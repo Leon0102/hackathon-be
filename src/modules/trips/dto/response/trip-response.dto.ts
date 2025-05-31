@@ -1,6 +1,7 @@
 import { Expose, Transform, Type } from 'class-transformer';
 
 import { MemberStatus, AgeRange, TravelInterest, TravelPurpose } from '../../../../constants';
+import { ItineraryResponseDto } from '../../../itinerary/dto/response/itinerary-response.dto';
 
 export class TripMemberUserDto {
     @Expose()
@@ -69,7 +70,8 @@ export class TripResponseDto {
     members: TripMemberResponseDto[];
 
     @Expose()
-    itinerary: string[];
+    @Type(() => ItineraryResponseDto)
+    itinerary: ItineraryResponseDto[];
 
     @Expose()
     createdAt: Date;

@@ -404,8 +404,11 @@ export class TripsService {
             throw new ForbiddenException('Only trip creator can add users to the trip');
         }
 
+        console.log(`Adding user ${userIdToAdd} to trip ${tripId} by user ${requestingUserId}`);
+
+
         // Check if the user exists
-        const userToAdd = await this.userModel.findById(userIdToAdd);
+        const userToAdd = await this.userModel.findById({ _id: userIdToAdd }).select('fullName email profilePictureUrl').exec();
         if (!userToAdd) {
             throw new NotFoundException('User to add not found');
         }
@@ -502,10 +505,10 @@ export class TripsService {
 
         // Safety check for profiles
         if (!profiles || profiles.trim().length === 0) {
-            return candidates.slice(0, 10); // Return first 10 candidates if profiles are empty
+            return candidates.slice(0, 30); // Return first 30 candidates if profiles are empty
         }
 
-        const prompt = `You are a recommendation system. Based on the user profiles below, return ONLY a JSON array of up to 10 user IDs that would be best matches for a trip. Consider factors like similar tags, interests, and compatibility. Respond with ONLY the JSON array, no explanation.
+        const prompt = `You are a recommendation system. Based on the user profiles below, return ONLY a JSON array of up to 30 user IDs that would be best matches for a trip. Consider factors like similar tags, interests, and compatibility. Respond with ONLY the JSON array, no explanation.
 
 Users:
 ${profiles}
@@ -551,7 +554,7 @@ Example response format: ["user_id_1", "user_id_2", "user_id_3"]`;
                             // Ensure all items are strings and filter out invalid IDs
                             recommendedIds = recommendedIds
                                 .filter(id => typeof id === 'string' && id.length > 0)
-                                .slice(0, 10);
+                                .slice(0, 30);
                         } else {
                             throw new Error('No JSON array found in response');
                         }
@@ -572,14 +575,14 @@ Example response format: ["user_id_1", "user_id_2", "user_id_3"]`;
 
             if (recommended.length === 0) {
                 // fallback to simple search
-                recommended = candidates.slice(0, 10);
+                recommended = candidates.slice(0, 30);
             }
 
-            return recommended.slice(0, 10);
+            return recommended.slice(0, 30);
         } catch (error) {
             console.error('Azure OpenAI API error:', error);
-            // fallback to return first 10 candidates
-            const recommended = candidates.slice(0, 10);
+            // fallback to return first 30 candidates
+            const recommended = candidates.slice(0, 30);
 
             return recommended;
         }

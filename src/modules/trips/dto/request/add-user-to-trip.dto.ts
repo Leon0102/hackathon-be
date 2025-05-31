@@ -1,4 +1,4 @@
-import { IsMongoId, IsString, IsOptional } from 'class-validator';
+import { IsMongoId, IsString, IsOptional, Allow } from 'class-validator';
 import { StringField } from '../../../../decorators';
 
 export class AddUserToTripDto {
@@ -9,4 +9,7 @@ export class AddUserToTripDto {
     @IsOptional()
     @IsString()
     message?: string;
+
+    @Allow()
+    id?: any; // Allow any 'id' property without validation errors
 }

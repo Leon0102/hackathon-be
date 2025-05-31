@@ -52,10 +52,7 @@ ItinerarySchema.pre('save', function(next) {
         return next(new Error('Day must be a positive number'));
     }
 
-    // Validate date is not in the past
-    if (this.date < new Date()) {
-        return next(new Error('Date cannot be in the past'));
-    }
-
+    // Skip date validation for fake itineraries
+    // This allows generating itineraries with past dates for demo purposes
     next();
 });
