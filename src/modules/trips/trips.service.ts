@@ -163,6 +163,14 @@ export class TripsService {
             throw new NotFoundException('Trip not found after update');
         }
 
+        // Sync group maxParticipants to match updated trip
+        if (updatedTrip.group) {
+            await this.groupModel.findByIdAndUpdate(
+                updatedTrip.group,
+                { maxParticipants: updatedTrip.maxParticipants }
+            ).exec();
+        }
+
         return updatedTrip;
     }
 
@@ -622,5 +630,70 @@ Example response format: ["user_id_1", "user_id_2", "user_id_3"]`;
 
             return recommended;
         }
+    }
+
+    // Recommend trips to a user based on profile and preferences
+    async recommendTrips(userId: string, maxResults = 10): Promise<any[]> {
+        // Log the recommendation request
+        await this.recLogModel.create({
+            user: userId,
+            trip: null,
+            keyword: 'trip_recommendation',
+            recommendationType: 'trips',
+            context: { source: 'trip_recommendation' }
+        });
+
+        // Fetch user profile
+        const user = await this.userModel.findById(userId).lean().exec();
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        // Fetch open trips the user is not part of
+        const candidates = await this.tripsModel
+            .find({ status: TripStatus.OPEN, 'members.user': { $ne: userId } })
+            .populate('createdBy', 'fullName email')
+            .lean()
+            .exec();
+
+        if (!candidates.length) {
+            return [];
+        }
+
+        // Build profiles and trip summaries for AI
+        const userProfile = `Tags: ${(user.tags || []).join(', ')}; TravelStyle: ${user.travelStyle}; Budget: ${user.budget}; Preferred: ${(user.preferredDestinations || []).join(', ')}`;
+        const tripList = candidates
+            .map(t => `ID: ${t._id}, Dest: ${t.destination}, Purposes: ${(t.travelPurposes || []).join(', ')}, Interests: ${(t.interests || []).join(', ')}`)
+            .join('\n');
+
+        const prompt = `You are a travel recommendation system. Given a user profile and a list of upcoming trips, return a JSON array of up to ${maxResults} trip IDs that best match the user's preferences. Respond with ONLY the JSON array.`;
+
+        // Call Azure OpenAI
+        const completion = await this.openai.chat.completions.create({
+            messages: [
+                { role: 'system', content: 'Travel recommendation agent.' },
+                { role: 'user', content: `${prompt}\nUser:\n${userProfile}\nTrips:\n${tripList}` }
+            ],
+            model: 'gpt-4o',
+            max_tokens: 256,
+            temperature: 0.3
+        });
+
+        // Parse recommended IDs
+        let recIds: string[] = [];
+        try {
+            const content = completion.choices?.[0]?.message?.content?.trim();
+            const match = content?.match(/\[.*\]/);
+            if (match) {
+                const arr = JSON.parse(match[0]);
+                recIds = Array.isArray(arr) ? arr.map(String) : [];
+            }
+        } catch {
+            recIds = candidates.map(t => t._id.toString());
+        }
+
+        // Filter and return top matches
+        const recommended = candidates.filter(t => recIds.includes(t._id.toString()));
+        return recommended.slice(0, maxResults);
     }
 }

@@ -286,4 +286,24 @@ return result.map(user => ({
     // Exclude passwordHash and other sensitive fields
 }));
     }
+
+    @Get('recommend')
+    @Auth([UserRole.USER, UserRole.ADMIN])
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(ClassSerializerInterceptor)
+    @ApiOkResponse({ description: 'Recommend trips based on user profile', type: [TripResponseDto] })
+    @ApiOperation({ summary: 'Get AI-based trip recommendations' })
+    @ApiQuery({ name: 'maxResults', required: false, type: Number })
+    async recommendTrips(
+      @AuthUser() user: Users,
+      @Query('maxResults') maxResults = 10
+    ) {
+      const recommendations = await this.tripsService.recommendTrips(
+        user._id.toString(),
+        maxResults
+      );
+      return plainToInstance(TripResponseDto, recommendations, {
+        excludeExtraneousValues: true
+      });
+    }
 }
