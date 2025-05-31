@@ -65,12 +65,17 @@ export class TripsService {
             maxParticipants: savedTrip.maxParticipants
         });
 
-        await group.save();
+        const savedGroup = await group.save();
+
+        // Update trip with group reference
+        savedTrip.group = savedGroup._id;
+        await savedTrip.save();
 
         const populatedTrip = await this.tripsModel
             .findById(savedTrip._id)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .lean()
             .exec();
 
@@ -88,6 +93,7 @@ export class TripsService {
             .find({ status: TripStatus.OPEN })
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
@@ -100,6 +106,8 @@ export class TripsService {
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .lean()
             .exec();
 
@@ -123,6 +131,7 @@ export class TripsService {
             })
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .sort({ createdAt: -1 })
             .lean()
             .exec();
@@ -143,6 +152,7 @@ export class TripsService {
             .findByIdAndUpdate(id, updateTripDto, { new: true })
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .lean()
             .exec();
 
@@ -196,6 +206,7 @@ export class TripsService {
             .find(query)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .sort({ createdAt: -1 })
             .lean()
             .exec();
@@ -252,6 +263,7 @@ export class TripsService {
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .lean()
             .exec();
     }
@@ -293,6 +305,7 @@ export class TripsService {
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .exec();
 
         if (!updatedTrip) {
@@ -345,6 +358,7 @@ export class TripsService {
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .exec();
 
         if (!updatedTrip) {
@@ -382,6 +396,7 @@ export class TripsService {
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .exec();
 
         if (!updatedTrip) {
@@ -453,6 +468,7 @@ export class TripsService {
             .findById(tripId)
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
+            .populate('group', 'name members maxParticipants')
             .lean()
             .exec();
 

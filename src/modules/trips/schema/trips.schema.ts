@@ -48,6 +48,9 @@ export class Trips extends Document {
     @Prop({ type: [{ type: Types.ObjectId, ref: 'Itinerary' }], default: [] })
     itinerary: Types.ObjectId[];
 
+    @Prop({ type: Types.ObjectId, ref: 'Group', required: false })
+    group?: Types.ObjectId;
+
     @Prop({ type: String, enum: Object.values(AgeRange), default: AgeRange.NO_PREFERENCE })
     preferredAgeRange: AgeRange;
 

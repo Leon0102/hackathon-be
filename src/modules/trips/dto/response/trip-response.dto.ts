@@ -3,6 +3,25 @@ import { Expose, Transform, Type } from 'class-transformer';
 import { MemberStatus, AgeRange, TravelInterest, TravelPurpose } from '../../../../constants';
 import { ItineraryResponseDto } from '../../../itinerary/dto/response/itinerary-response.dto';
 
+export class TripGroupDto {
+    @Expose()
+    @Transform(({ obj, key }) => {
+        if (obj._id) return obj._id.toString();
+        if (obj.id) return obj.id.toString();
+        return obj[key]?.toString();
+    })
+    id: string;
+
+    @Expose()
+    name: string;
+
+    @Expose()
+    members: string[];
+
+    @Expose()
+    maxParticipants: number;
+}
+
 export class TripMemberUserDto {
     @Expose()
     fullName: string;
@@ -72,6 +91,10 @@ export class TripResponseDto {
     @Expose()
     @Type(() => ItineraryResponseDto)
     itinerary: ItineraryResponseDto[];
+
+    @Expose()
+    @Type(() => TripGroupDto)
+    group?: TripGroupDto;
 
     @Expose()
     createdAt: Date;
