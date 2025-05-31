@@ -221,7 +221,7 @@ export class TripsController {
         return this.tripsService.removeMember(id, memberId, user._id.toString());
     }
 
-    @Post(':id/recommend')
+    @Get(':id/recommend')
     @Auth([UserRole.USER, UserRole.ADMIN])
     @HttpCode(HttpStatus.OK)
     @UseInterceptors(ClassSerializerInterceptor)
@@ -232,13 +232,33 @@ export class TripsController {
     @ApiOperation({ summary: 'Recommend members for a trip' })
     async recommendMembers(
         @Param('id') id: string,
-        @Body() recommendDto: RecommendMembersDto,
         @AuthUser() user: Users
     ) {
-        const result = await this.tripsService.recommendMembers(id, user._id.toString(), recommendDto);
+        const result = await this.tripsService.recommendMembers(id, user._id.toString());
 
-        return plainToInstance(Users, result, {
-            excludeExtraneousValues: true
-        });
+// Simply return the result without transformation
+if (!result || !Array.isArray(result)) {
+    return [];
+}
+
+// Remove sensitive data manually
+return result.map(user => ({
+    _id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    profilePictureUrl: user.profilePictureUrl,
+    age: user.age,
+    gender: user.gender,
+    bio: user.bio,
+    languages: user.languages,
+    travelStyle: user.travelStyle,
+    budget: user.budget,
+    preferredDestinations: user.preferredDestinations,
+    trustScore: user.trustScore,
+    isVerified: user.isVerified,
+    role: user.role,
+    tags: user.tags,
+    // Exclude passwordHash and other sensitive fields
+}));
     }
 }

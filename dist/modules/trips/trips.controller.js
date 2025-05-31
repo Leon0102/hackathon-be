@@ -82,8 +82,8 @@ let TripsController = class TripsController {
     async removeMember(id, memberId, user) {
         return this.tripsService.removeMember(id, memberId, user._id.toString());
     }
-    async recommendMembers(id, recommendDto, user) {
-        const result = await this.tripsService.recommendMembers(id, user._id.toString(), recommendDto);
+    async recommendMembers(id, user) {
+        const result = await this.tripsService.recommendMembers(id, user._id.toString());
         return (0, class_transformer_1.plainToInstance)(users_schema_1.Users, result, {
             excludeExtraneousValues: true
         });
@@ -273,7 +273,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "removeMember", null);
 __decorate([
-    (0, common_1.Post)(':id/recommend'),
+    (0, common_1.Get)(':id/recommend'),
     (0, decorators_1.Auth)([constants_1.UserRole.USER, constants_1.UserRole.ADMIN]),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseInterceptors)(common_1.ClassSerializerInterceptor),
@@ -283,11 +283,9 @@ __decorate([
     }),
     (0, swagger_1.ApiOperation)({ summary: 'Recommend members for a trip' }),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.AuthUser)()),
+    __param(1, (0, decorators_1.AuthUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, request_1.RecommendMembersDto,
-        users_schema_1.Users]),
+    __metadata("design:paramtypes", [String, users_schema_1.Users]),
     __metadata("design:returntype", Promise)
 ], TripsController.prototype, "recommendMembers", null);
 TripsController = __decorate([

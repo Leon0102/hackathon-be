@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AwsS3Service = void 0;
 const client_s3_1 = require("@aws-sdk/client-s3");
-const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const common_1 = require("@nestjs/common");
 const mime_types_1 = __importDefault(require("mime-types"));
 const providers_1 = require("../../providers");
@@ -46,15 +45,6 @@ let AwsS3Service = class AwsS3Service {
             ACL: 'public-read'
         }));
         return key;
-    }
-    getSignedUrl(key) {
-        const command = new client_s3_1.GetObjectCommand({
-            Bucket: this.bucketName,
-            Key: key
-        });
-        return (0, s3_request_presigner_1.getSignedUrl)(this.s3Client, command, {
-            expiresIn: this.expiresIn
-        });
     }
     async deleteObject(key) {
         if (this.validateRemovedImage(key)) {

@@ -11,10 +11,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersSchema = exports.Users = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
-const mongoose_2 = require("mongoose");
 const utils_1 = require("../../../common/utils");
 const constants_1 = require("../../../constants");
-let Users = class Users extends mongoose_2.Document {
+let Users = class Users {
 };
 __decorate([
     (0, mongoose_1.Prop)({ type: String, required: true, trim: true }),

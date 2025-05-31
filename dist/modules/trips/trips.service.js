@@ -289,9 +289,17 @@ let TripsService = class TripsService {
         }
         return updatedTrip;
     }
-    async recommendMembers(tripId, userId, dto) {
+    async recommendMembers(tripId, userId) {
         var _a, _b;
-        await this.recLogModel.create({ user: userId, trip: tripId, keyword: dto.keyword });
+        await this.recLogModel.create({
+            user: userId,
+            trip: tripId,
+            keyword: 'trip_member_recommendation',
+            recommendationType: 'trip_members',
+            context: {
+                source: 'trip_recommendation'
+            }
+        });
         const trip = await this.tripsModel.findById(tripId).exec();
         if (!trip) {
             throw new common_1.NotFoundException('Trip not found');
@@ -302,29 +310,66 @@ let TripsService = class TripsService {
             userId
         ];
         const candidates = await this.userModel.find({ _id: { $nin: excludedIds } }).exec();
+        if (!candidates || candidates.length === 0) {
+            return [];
+        }
         const profiles = candidates
-            .map((u) => `ID: ${u._id}, Name: ${u.fullName}, Tags: ${(u.tags || []).join(', ')}, Bio: ${u.bio}`)
+            .map((u) => `ID: ${u._id}, Name: ${u.fullName || 'Unknown'}, Tags: ${(u.tags || []).join(', ')}, Bio: ${u.bio || 'No bio'}`)
             .join('\n');
-        const prompt = `Recommend up to 10 user IDs best matching keyword "${dto.keyword}" from the users list:\n${profiles}`;
+        if (!profiles || profiles.trim().length === 0) {
+            return candidates.slice(0, 10);
+        }
+        const prompt = `You are a recommendation system. Based on the user profiles below, return ONLY a JSON array of up to 10 user IDs that would be best matches for a trip. Consider factors like similar tags, interests, and compatibility. Respond with ONLY the JSON array, no explanation.
+
+Users:
+${profiles}
+
+Example response format: ["user_id_1", "user_id_2", "user_id_3"]`;
         try {
             const completion = await this.openai.chat.completions.create({
-                messages: [{ role: 'user', content: prompt }],
-                model: '',
-                max_tokens: 256
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a travel recommendation system. Always respond with only a JSON array of user IDs, no additional text or explanation.'
+                    },
+                    { role: 'user', content: prompt }
+                ],
+                model: 'gpt-4o',
+                max_tokens: 256,
+                temperature: 0.3
             });
             let recommendedIds = [];
-            try {
+            if (completion && completion.choices && completion.choices.length > 0) {
                 const responseContent = (_b = (_a = completion.choices[0]) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.content;
+                console.log('OpenAI response content:', responseContent);
                 if (responseContent) {
-                    recommendedIds = JSON.parse(responseContent);
+                    try {
+                        const cleanedContent = responseContent.trim();
+                        const jsonRegex = /\[.*\]/;
+                        const jsonMatch = jsonRegex.exec(cleanedContent);
+                        if (jsonMatch) {
+                            recommendedIds = JSON.parse(jsonMatch[0]);
+                            if (!Array.isArray(recommendedIds)) {
+                                throw new Error('Response is not an array');
+                            }
+                            recommendedIds = recommendedIds
+                                .filter(id => typeof id === 'string' && id.length > 0)
+                                .slice(0, 10);
+                        }
+                        else {
+                            throw new Error('No JSON array found in response');
+                        }
+                    }
+                    catch (parseError) {
+                        console.warn('Failed to parse OpenAI response as JSON:', parseError);
+                        console.warn('Raw response:', responseContent);
+                        recommendedIds = candidates.map((u) => u._id.toString());
+                    }
                 }
             }
-            catch (_c) {
-                const keywordLower = dto.keyword.toLowerCase();
-                recommendedIds = candidates
-                    .filter((u) => Array.isArray(u.tags) &&
-                    u.tags.some((tag) => tag.toLowerCase().includes(keywordLower)))
-                    .map((u) => u._id.toString());
+            else {
+                console.warn('Invalid OpenAI response structure');
+                recommendedIds = candidates.map((u) => u._id.toString());
             }
             let recommended = candidates.filter((u) => recommendedIds.includes(u._id.toString()));
             if (recommended.length === 0) {
@@ -334,14 +379,7 @@ let TripsService = class TripsService {
         }
         catch (error) {
             console.error('Azure OpenAI API error:', error);
-            const keywordLower = dto.keyword.toLowerCase();
-            const recommended = candidates
-                .filter((u) => Array.isArray(u.tags) &&
-                u.tags.some((tag) => tag.toLowerCase().includes(keywordLower)))
-                .slice(0, 10);
-            if (recommended.length === 0) {
-                return candidates.slice(0, 10);
-            }
+            const recommended = candidates.slice(0, 10);
             return recommended;
         }
     }
