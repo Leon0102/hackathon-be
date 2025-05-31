@@ -70,6 +70,18 @@ __decorate([
     (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Types.ObjectId, ref: 'Itinerary' }], default: [] }),
     __metadata("design:type", Array)
 ], Trips.prototype, "itinerary", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, enum: Object.values(constants_1.AgeRange), default: constants_1.AgeRange.NO_PREFERENCE }),
+    __metadata("design:type", String)
+], Trips.prototype, "preferredAgeRange", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], enum: Object.values(constants_1.TravelPurpose), default: [] }),
+    __metadata("design:type", Array)
+], Trips.prototype, "travelPurposes", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], enum: Object.values(constants_1.TravelInterest), default: [] }),
+    __metadata("design:type", Array)
+], Trips.prototype, "interests", void 0);
 Trips = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Trips);
@@ -79,16 +91,19 @@ exports.TripsSchema.index({ createdBy: 1 });
 exports.TripsSchema.index({ destination: 'text' });
 exports.TripsSchema.index({ startDate: 1, endDate: 1 });
 exports.TripsSchema.index({ status: 1 });
-exports.TripsSchema.index({ 'members.userId': 1 });
+exports.TripsSchema.index({ 'members.user': 1 });
+exports.TripsSchema.index({ preferredAgeRange: 1 });
+exports.TripsSchema.index({ travelPurposes: 1 });
+exports.TripsSchema.index({ interests: 1 });
 exports.TripsSchema.virtual('currentMemberCount').get(function () {
-    return this.members.filter(member => member.status === constants_1.MemberStatus.JOINED).length;
+    return this.members.filter((member) => member.status === constants_1.MemberStatus.JOINED).length;
 });
 exports.TripsSchema.virtual('availableSpots').get(function () {
-    const joinedMembers = this.members.filter(member => member.status === constants_1.MemberStatus.JOINED).length;
+    const joinedMembers = this.members.filter((member) => member.status === constants_1.MemberStatus.JOINED).length;
     return this.maxParticipants - joinedMembers;
 });
 exports.TripsSchema.virtual('isFull').get(function () {
-    const joinedMembers = this.members.filter(member => member.status === constants_1.MemberStatus.JOINED).length;
+    const joinedMembers = this.members.filter((member) => member.status === constants_1.MemberStatus.JOINED).length;
     return joinedMembers >= this.maxParticipants;
 });
 exports.TripsSchema.pre('save', function (next) {

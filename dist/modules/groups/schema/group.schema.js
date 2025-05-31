@@ -30,6 +30,10 @@ __decorate([
     (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Types.ObjectId, ref: 'Users' }], default: [] }),
     __metadata("design:type", Array)
 ], Group.prototype, "members", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, required: true, min: 1 }),
+    __metadata("design:type", Number)
+], Group.prototype, "maxParticipants", void 0);
 Group = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Group);

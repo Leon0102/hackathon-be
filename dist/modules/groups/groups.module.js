@@ -27,7 +27,10 @@ GroupsModule = __decorate([
         ],
         providers: [groups_service_1.GroupsService],
         controllers: [groups_controller_1.GroupsController],
-        exports: [groups_service_1.GroupsService]
+        exports: [
+            groups_service_1.GroupsService,
+            mongoose_1.MongooseModule
+        ]
     })
 ], GroupsModule);
 exports.GroupsModule = GroupsModule;

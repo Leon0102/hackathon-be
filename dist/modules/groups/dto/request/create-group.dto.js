@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateGroupDto = void 0;
 const class_validator_1 = require("class-validator");
+const decorators_1 = require("../../../../decorators");
 class CreateGroupDto {
 }
 __decorate([
@@ -21,5 +22,10 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateGroupDto.prototype, "tripId", void 0);
+__decorate([
+    (0, decorators_1.NumberField)(),
+    (0, class_validator_1.Min)(1, { message: 'Maximum participants must be at least 1' }),
+    __metadata("design:type", Number)
+], CreateGroupDto.prototype, "maxParticipants", void 0);
 exports.CreateGroupDto = CreateGroupDto;
 //# sourceMappingURL=create-group.dto.js.map

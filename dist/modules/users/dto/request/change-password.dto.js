@@ -10,15 +10,26 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChangePasswordDto = void 0;
-const decorators_1 = require("../../../../decorators");
+const swagger_1 = require("@nestjs/swagger");
+const class_validator_1 = require("class-validator");
 class ChangePasswordDto {
 }
 __decorate([
-    (0, decorators_1.StringField)({ trim: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'New password',
+        example: 'newSecurePassword123'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], ChangePasswordDto.prototype, "newPassword", void 0);
 __decorate([
-    (0, decorators_1.StringField)({ trim: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Confirm new password',
+        example: 'newSecurePassword123'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], ChangePasswordDto.prototype, "newPasswordConfirmed", void 0);
 exports.ChangePasswordDto = ChangePasswordDto;

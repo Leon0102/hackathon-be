@@ -9,9 +9,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TripsModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const trips_schema_1 = require("./schema/trips.schema");
-const recommendation_log_schema_1 = require("./schema/recommendation-log.schema");
+const groups_module_1 = require("../groups/groups.module");
 const users_schema_1 = require("../users/schema/users.schema");
+const recommendation_log_schema_1 = require("./schema/recommendation-log.schema");
+const trips_schema_1 = require("./schema/trips.schema");
 const trips_controller_1 = require("./trips.controller");
 const trips_service_1 = require("./trips.service");
 let TripsModule = class TripsModule {
@@ -23,7 +24,8 @@ TripsModule = __decorate([
                 { name: trips_schema_1.Trips.name, schema: trips_schema_1.TripsSchema },
                 { name: recommendation_log_schema_1.RecommendationLog.name, schema: recommendation_log_schema_1.RecommendationLogSchema },
                 { name: users_schema_1.Users.name, schema: users_schema_1.UsersSchema }
-            ])
+            ]),
+            groups_module_1.GroupsModule
         ],
         controllers: [trips_controller_1.TripsController],
         providers: [trips_service_1.TripsService],

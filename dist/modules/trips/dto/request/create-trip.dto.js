@@ -17,6 +17,9 @@ const constants_1 = require("../../../../constants");
 class CreateTripDto {
     constructor() {
         this.status = constants_1.TripStatus.OPEN;
+        this.preferredAgeRange = constants_1.AgeRange.NO_PREFERENCE;
+        this.travelPurposes = [];
+        this.interests = [];
     }
 }
 __decorate([
@@ -44,5 +47,22 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateTripDto.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsEnum)(constants_1.AgeRange),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateTripDto.prototype, "preferredAgeRange", void 0);
+__decorate([
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsEnum)(constants_1.TravelPurpose, { each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], CreateTripDto.prototype, "travelPurposes", void 0);
+__decorate([
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsEnum)(constants_1.TravelInterest, { each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], CreateTripDto.prototype, "interests", void 0);
 exports.CreateTripDto = CreateTripDto;
 //# sourceMappingURL=create-trip.dto.js.map

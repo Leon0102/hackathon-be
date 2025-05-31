@@ -15,8 +15,9 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./create-trip.dto"), exports);
-__exportStar(require("./update-trip.dto"), exports);
-__exportStar(require("./update-member-status.dto"), exports);
 __exportStar(require("./join-trip.dto"), exports);
 __exportStar(require("./recommend-members.dto"), exports);
+__exportStar(require("./search-trips.dto"), exports);
+__exportStar(require("./update-member-status.dto"), exports);
+__exportStar(require("./update-trip.dto"), exports);
 //# sourceMappingURL=index.js.map

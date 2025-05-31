@@ -10,23 +10,41 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserRegisterDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
-const decorators_1 = require("../../../decorators");
+const class_transformer_1 = require("class-transformer");
 class UserRegisterDto {
 }
 __decorate([
-    (0, decorators_1.StringField)({ example: 'John Doe' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Full name of the user',
+        example: 'John Doe'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UserRegisterDto.prototype, "fullName", void 0);
 __decorate([
-    (0, decorators_1.EmailField)({ toLowerCase: true, example: 'user@vstation.com' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'User email address',
+        example: 'user@vstation.com'
+    }),
+    (0, class_validator_1.IsEmail)(),
     (0, class_validator_1.Matches)(/^[\w+.-]+@[\dA-Za-z-]+\.[\d.A-Za-z-]+$/, {
         message: 'please enter a valid email address'
     }),
+    (0, class_transformer_1.Transform)(({ value }) => value === null || value === void 0 ? void 0 : value.toLowerCase(), { toClassOnly: true }),
     __metadata("design:type", String)
 ], UserRegisterDto.prototype, "email", void 0);
 __decorate([
-    (0, decorators_1.StringField)({ minLength: 8, example: 'vStation@123', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'User password',
+        example: 'vStation@123',
+        required: false,
+        minLength: 8
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(8),
     __metadata("design:type", String)
 ], UserRegisterDto.prototype, "passwordHash", void 0);

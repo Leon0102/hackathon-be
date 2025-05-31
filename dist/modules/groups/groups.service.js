@@ -51,6 +51,9 @@ let GroupsService = class GroupsService {
         if (group.members.some((member) => member.toString() === userId)) {
             throw new common_1.BadRequestException('Already a member');
         }
+        if (group.members.length >= group.maxParticipants) {
+            throw new common_1.BadRequestException('Group is full');
+        }
         group.members.push(new mongoose_2.Types.ObjectId(userId));
         return group.save();
     }

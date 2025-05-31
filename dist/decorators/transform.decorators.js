@@ -12,6 +12,8 @@ function Trim() {
             return (0, lodash_1.map)(value, (v) => (0, lodash_1.trim)(v).replace(/\s\s+/g, ' '));
         }
         return (0, lodash_1.trim)(value).replace(/\s\s+/g, ' ');
+    }, {
+        toClassOnly: true
     });
 }
 exports.Trim = Trim;
@@ -92,11 +94,15 @@ function S3UrlParser() {
                 return key;
             }
         }
+    }, {
+        toClassOnly: true
     });
 }
 exports.S3UrlParser = S3UrlParser;
 function PhoneNumberSerializer() {
-    return (0, class_transformer_1.Transform)((params) => (0, libphonenumber_js_1.parsePhoneNumber)(params.value).number);
+    return (0, class_transformer_1.Transform)((params) => (0, libphonenumber_js_1.parsePhoneNumber)(params.value).number, {
+        toClassOnly: true
+    });
 }
 exports.PhoneNumberSerializer = PhoneNumberSerializer;
 //# sourceMappingURL=transform.decorators.js.map

@@ -15,15 +15,20 @@ import { GeneratorProvider } from '../providers';
  * @constructor
  */
 export function Trim(): PropertyDecorator {
-    return Transform((params) => {
-        const value = params.value as string[] | string;
+    return Transform(
+        (params) => {
+            const value = params.value as string[] | string;
 
-        if (isArray(value)) {
-            return map(value, (v) => trim(v).replace(/\s\s+/g, ' '));
+            if (isArray(value)) {
+                return map(value, (v) => trim(v).replace(/\s\s+/g, ' '));
+            }
+
+            return trim(value).replace(/\s\s+/g, ' ');
+        },
+        {
+            toClassOnly: true
         }
-
-        return trim(value).replace(/\s\s+/g, ' ');
-    });
+    );
 }
 
 export function ToBoolean(): PropertyDecorator {
@@ -133,25 +138,35 @@ export function ToUpperCase(): PropertyDecorator {
 }
 
 export function S3UrlParser(): PropertyDecorator {
-    return Transform((params) => {
-        const key = params.value as string;
+    return Transform(
+        (params) => {
+            const key = params.value as string;
 
-        switch (params.type) {
-            case TransformationType.CLASS_TO_PLAIN: {
-                return GeneratorProvider.getS3PublicUrl(key);
-            }
+            switch (params.type) {
+                case TransformationType.CLASS_TO_PLAIN: {
+                    return GeneratorProvider.getS3PublicUrl(key);
+                }
 
-            case TransformationType.PLAIN_TO_CLASS: {
-                return GeneratorProvider.getS3Key(key);
-            }
+                case TransformationType.PLAIN_TO_CLASS: {
+                    return GeneratorProvider.getS3Key(key);
+                }
 
-            default: {
-                return key;
+                default: {
+                    return key;
+                }
             }
+        },
+        {
+            toClassOnly: true
         }
-    });
+    );
 }
 
 export function PhoneNumberSerializer(): PropertyDecorator {
-    return Transform((params) => parsePhoneNumber(params.value as string).number);
+    return Transform(
+        (params) => parsePhoneNumber(params.value as string).number,
+        {
+            toClassOnly: true
+        }
+    );
 }

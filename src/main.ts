@@ -1,5 +1,4 @@
 import { RequestMethod, ValidationPipe } from '@nestjs/common';
-import * as fs from 'fs';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ExpressAdapter } from '@nestjs/platform-express';

@@ -18,14 +18,12 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const openai_1 = require("openai");
 const constants_1 = require("../../constants");
-const users_schema_1 = require("../users/schema/users.schema");
-const recommendation_log_schema_1 = require("./schema/recommendation-log.schema");
-const trips_schema_1 = require("./schema/trips.schema");
 let TripsService = class TripsService {
-    constructor(tripsModel, recLogModel, userModel) {
+    constructor(tripsModel, recLogModel, userModel, groupModel) {
         this.tripsModel = tripsModel;
         this.recLogModel = recLogModel;
         this.userModel = userModel;
+        this.groupModel = groupModel;
         const apiKey = process.env.AZURE_OPENAI_KEY;
         const endpoint = `https://${process.env.AZURE_OPENAI_RESOURCE_NAME}.openai.azure.com`;
         const deployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
@@ -161,32 +159,25 @@ let TripsService = class TripsService {
         if (trip.status !== constants_1.TripStatus.OPEN) {
             throw new common_1.BadRequestException('Trip is not open for joining');
         }
-        const existingMember = trip.members.find((member) => member.user.toString() === userId);
-        if (existingMember) {
-            throw new common_1.BadRequestException('You are already a member of this trip');
+        const groups = await this.groupModel.find({ trip: id });
+        if (!groups.length) {
+            throw new common_1.NotFoundException('No groups available for this trip');
         }
-        const joinedMembers = trip.members.filter((member) => member.status === constants_1.MemberStatus.JOINED);
-        if (joinedMembers.length >= trip.maxParticipants) {
-            throw new common_1.BadRequestException('Trip is full');
+        const isAlreadyInGroup = groups.some((group) => group.members.some((member) => member.toString() === userId));
+        if (isAlreadyInGroup) {
+            throw new common_1.BadRequestException('You are already a member of a group for this trip');
         }
-        const memberStatus = trip.createdBy.toString() === userId ? constants_1.MemberStatus.JOINED : constants_1.MemberStatus.REQUESTED;
-        trip.members.push({
-            user: new mongoose_2.Types.ObjectId(userId),
-            status: memberStatus,
-            joinedAt: new Date(),
-            message: joinTripDto.message
-        });
-        await trip.save();
-        const updatedTrip = await this.tripsModel
+        const availableGroup = groups.find((group) => group.members.length < group.maxParticipants);
+        if (!availableGroup) {
+            throw new common_1.BadRequestException('All groups for this trip are full');
+        }
+        availableGroup.members.push(new mongoose_2.Types.ObjectId(userId));
+        await availableGroup.save();
+        return this.tripsModel
             .findById(id)
             .populate('createdBy', 'fullName email profilePictureUrl')
-            .populate('members.user', 'fullName email profilePictureUrl')
             .lean()
             .exec();
-        if (!updatedTrip) {
-            throw new common_1.NotFoundException('Trip not found after join');
-        }
-        return updatedTrip;
     }
     async leaveTrip(id, userId) {
         const trip = await this.tripsModel.findById(id);
@@ -331,10 +322,12 @@ let TripsService = class TripsService {
 };
 TripsService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)(trips_schema_1.Trips.name)),
-    __param(1, (0, mongoose_1.InjectModel)(recommendation_log_schema_1.RecommendationLog.name)),
-    __param(2, (0, mongoose_1.InjectModel)(users_schema_1.Users.name)),
+    __param(0, (0, mongoose_1.InjectModel)('Trips')),
+    __param(1, (0, mongoose_1.InjectModel)('RecommendationLog')),
+    __param(2, (0, mongoose_1.InjectModel)('Users')),
+    __param(3, (0, mongoose_1.InjectModel)('Group')),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model])
 ], TripsService);

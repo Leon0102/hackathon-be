@@ -117,5 +117,17 @@ __decorate([
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", Boolean)
 ], TripResponseDto.prototype, "isFull", void 0);
+__decorate([
+    (0, class_transformer_1.Expose)(),
+    __metadata("design:type", String)
+], TripResponseDto.prototype, "preferredAgeRange", void 0);
+__decorate([
+    (0, class_transformer_1.Expose)(),
+    __metadata("design:type", Array)
+], TripResponseDto.prototype, "travelPurposes", void 0);
+__decorate([
+    (0, class_transformer_1.Expose)(),
+    __metadata("design:type", Array)
+], TripResponseDto.prototype, "interests", void 0);
 exports.TripResponseDto = TripResponseDto;
 //# sourceMappingURL=trip-response.dto.js.map
