@@ -64,7 +64,11 @@ export class ItineraryResponseDto {
     @Expose()
     formattedDate: string;
 
-    @ApiProperty({ description: 'Created at timestamp' })
+    @ApiProperty({ description: 'List of image URLs for this itinerary day', type: [String] })
+    @Expose()
+    images: string[];
+
+    @ApiProperty({ description: 'Creation timestamp' })
     @Expose()
     createdAt: Date;
 

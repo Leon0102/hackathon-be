@@ -94,6 +94,7 @@ export class TripsService {
             .populate('createdBy', 'fullName email profilePictureUrl')
             .populate('members.user', 'fullName email profilePictureUrl')
             .populate('group', 'name members maxParticipants')
+            .populate('itinerary')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)

@@ -164,6 +164,26 @@ async function main() {
   console.log('📅 Creating detailed itineraries...');
   let totalItineraries = 0;
 
+  // Generate travel-themed image URLs for itineraries
+  const generateTravelImages = (destination: string, day: number) => {
+    const imageCategories = [
+      'travel', 'nature', 'architecture', 'food', 'culture', 'city',
+      'landscape', 'museum', 'beach', 'mountain', 'temple', 'market'
+    ];
+
+    const images: string[] = [];
+    const imageCount = faker.number.int({ min: 2, max: 5 });
+
+    for (let i = 0; i < imageCount; i++) {
+      const category = faker.helpers.arrayElement(imageCategories);
+      const size = faker.helpers.arrayElement(['800x600', '1024x768', '1200x800']);
+      // Using Lorem Picsum for realistic placeholder images
+      images.push(`https://picsum.photos/${size}?random=${Date.now()}-${i}-${day}`);
+    }
+
+    return images;
+  };
+
   for (const trip of trips) {
     const tripDuration = Math.ceil((trip.endDate - trip.startDate) / (1000 * 60 * 60 * 24));
 
@@ -174,7 +194,7 @@ async function main() {
       const activities: Array<{time: string, description: string, location: string}> = [];
       const activityCount = faker.number.int({ min: 3, max: 6 });
 
-      const activityTemplates = [
+      const activityTemplates: Array<{time: string, type: string, locations: string[]}> = [
         { time: '08:00', type: 'breakfast', locations: ['Hotel Restaurant', 'Local Café', 'Street Market'] },
         { time: '09:30', type: 'morning', locations: ['Museum', 'Historical Site', 'Park', 'Temple', 'Market'] },
         { time: '12:00', type: 'lunch', locations: ['Local Restaurant', 'Food Market', 'Rooftop Dining'] },
@@ -200,11 +220,15 @@ async function main() {
       // Sort activities by time
       activities.sort((a, b) => a.time.localeCompare(b.time));
 
+      // Generate realistic travel images for this day
+      const dayImages = generateTravelImages(trip.destination, day);
+
       const itinerary = await ItineraryModel.create({
         tripId: trip._id,
         day: day,
         date: itineraryDate,
-        activities: activities
+        activities: activities,
+        images: dayImages
       });
 
       // Add itinerary reference to trip

@@ -31,6 +31,10 @@ export class Itinerary extends Document {
 
     @Prop({ type: [ActivitySchema], default: [] })
     activities: Activity[];
+
+    //images
+    @Prop({ type: [String], default: [] })
+    images: string[];
 }
 
 export const ItinerarySchema = SchemaFactory.createForClass(Itinerary);
